@@ -1,0 +1,51 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(ggplot2)
+library(ggExtra)
+library(gridExtra)
+```
+
+```{r}
+wine <- read.csv(file='winequality-white.csv',
+                 header=T,
+                 sep=";",
+                 fill=T,
+                 strip.white=T,
+                 blank.lines.skip=T)
+cnames <- colnames(wine)
+cnames_ind <- head(cnames, length(cnames)-1)
+wine_ind <- wine[, cnames_ind]
+summary(wine)
+```
+
+**Correlation between variables**
+```{r, fig.width=11}
+library(corrplot)
+cnames_ind.new <- c('f.a', 'v.a', 'c.a', 'r.s', 'ch', 'f.s.d', 't.s.d', 'd', 'pH', 's', 'a')
+cnames_ind.old <- colnames(wine_ind)
+colnames(wine_ind) <- cnames_ind.new
+cor <- corrplot.mixed(cor(wine_ind),
+                       lower = "number", 
+                       upper = "circle",
+                       tl.col = "black")
+```
+Visualizing highly correlated features
+```{r, fig.height=9}
+
+pairs(wine[, cnames_ind[1:(length(cnames_ind)%/%2)]], pch=19,
+      col=wine$quality,
+      lower.panel=NULL)
+```
+
+
+```{r}
+pairs(wine[, cnames_ind[(length(cnames_ind)%/%2):length(cnames_ind)]])
+```
