@@ -63,6 +63,21 @@ The dataset contains `r nrow(wine)` instances with `r length(colnames(wine))-1` 
 show(str(wine))
 ```
 
+### Acidity  
+
+
+
+Before proceeding to the EDA or forming smart questions, it would be appropriate to first understand what each chemical is and its association to wine. The description for each chemical is given below:  
+
+Chemical | Description
+-------|-------
+fixed.acidity| description goes here
+
+
+# Chapter 4: Smart Questions
+
+
+
 # Chapter 3: Exploratory Data Analysis
 
 ## Wine quality distribution
