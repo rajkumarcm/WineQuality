@@ -1,19 +1,48 @@
 ---
-title: "R Notebook"
-output: html_notebook
+title: "Wine Quality"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+    number_sections: true
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+<style>
+body
+{
+  text-align: justify
+}
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+.p
+{
+  margin-top:20px;
+}
+
+</style>
+
+```{r, include=F}
+knitr::opts_chunk$set(warning=F, results='hide', message=F)
+```
 
 ```{r}
 library(ggplot2)
 library(ggExtra)
 library(gridExtra)
+library(ezids)
 ```
+# Chapter 1: Introduction  
 
+Wine is an alcoholic beverage that has been produced for over thousands of years and was originally founded in Georgia from 6000BC. The religious root the drink has, caused many to consume in the remembrance of God and this widened the trade across Europe. People consume wine also for its wonderful sweet taste and nutritious properties that are beneficial to health. While there are many types of wines, two of the most famous variants would be the Red and White versions produced mostly in the Europe. Wines are sold at different price ranges depending on its quality, while the least expensive could be as low as $4, the pinnacle of wines could cost beyond $200 per bottle. Given a bottle of wine could be sold for over $200, we decided to conduct analyses to better understand what gives rise to the quality and their associated benefits by assessing publicly available dataset downloaded from UCI Machine Learning Repository.  
 ```{r}
+
 wine <- read.csv(file='winequality-white.csv',
                  header=T,
                  sep=";",
@@ -23,10 +52,32 @@ wine <- read.csv(file='winequality-white.csv',
 cnames <- colnames(wine)
 cnames_ind <- head(cnames, length(cnames)-1)
 wine_ind <- wine[, cnames_ind]
-summary(wine)
+```
+# Chapter 2: Description of the data  
+
+## Source Data  
+
+The dataset contains `r nrow(wine)` instances with `r length(colnames(wine))-1` explanatory and 1 dependent variable - *quality* all of which are numerical. Also, the dataset does not appear to contain any missing field which appeared to be a good fit for the analyses. The features in the dataset represent various chemical levels associated with different quality level. A glimpse of the dataset is as follows:  
+
+```{r, results='markup'}
+show(str(wine))
+```
+
+# Chapter 3: Exploratory Data Analysis
+
+## Wine quality distribution
+
+```{r}
+# May be we should start using bar instead of histogram as this looks so ugly
+ggplot(wine, aes(quality)) +
+  geom_histogram(color='white', fill='red', alpha=0.5) +
+  xlab('Quality') +
+  ylab('Frequency rate') +
+  labs('Quality distribution')
 ```
 
 **Correlation between variables**
+Visualizing highly correlated features
 ```{r, fig.width=11}
 library(corrplot)
 cnames_ind.new <- c('f.a', 'v.a', 'c.a', 'r.s', 'ch', 'f.s.d', 't.s.d', 'd', 'pH', 's', 'a')
@@ -37,15 +88,57 @@ cor <- corrplot.mixed(cor(wine_ind),
                        upper = "circle",
                        tl.col = "black")
 ```
-Visualizing highly correlated features
-```{r, fig.height=9}
 
-pairs(wine[, cnames_ind[1:(length(cnames_ind)%/%2)]], pch=19,
-      col=wine$quality,
-      lower.panel=NULL)
+
+```{r}
+
+# pairs(wine[, cnames_ind[1:(length(cnames_ind)%/%2)]], pch=19,
+#       col=wine$quality,
+#       lower.panel=NULL)
 ```
 
 
 ```{r}
-pairs(wine[, cnames_ind[(length(cnames_ind)%/%2):length(cnames_ind)]])
+
+# Which features play critical role in deciding whether a wine is good
+ggplot(wine, aes(x=quality)) +
+  geom_histogram(fill='blue', alpha=0.5)
+quality_threshold <- 6
+wine.good <- wine[wine[, "quality"] >= quality_threshold, ]
+xkablesummary(wine.good)
+```
+
+```{r}
+# Which features play critical role in deciding whether a wine is good
+wine.bad <- wine[wine[, "quality"] < quality_threshold, ]
+xkablesummary(wine.bad)
+```
+
+```{r}
+quality2 <- wine$quality
+quality2[quality2 >= quality_threshold] = 9 # good
+quality2[quality2 < quality_threshold] = 0 # bad
+
+wine2 <- cbind(wine, quality2)
+wine2.colnames <- colnames(wine2)
+wine2.colnames[13] <- 'quality_class'
+colnames(wine2) <- wine2.colnames
+
+plots <- list()
+
+for (i in 1:2)
+{
+  attribute <- wine2.colnames[i]
+  p <- ggplot(wine2, aes(x=quality_class, y=attribute)) +
+       geom_boxplot(aes(group=quality_class, color=quality_class), width=0.9)
+  plots[[i]] <- p
+}
+
+# grid.arrange(plots, nrow=6, ncol=2)
+do.call(grid.arrange, plots)
+
+
+```
+
+```{r}
 ```
