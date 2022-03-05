@@ -40,7 +40,7 @@ library(ezids)
 ```
 # Chapter 1: Introduction  
 
-Wine is an alcoholic beverage that has been produced for over thousands of years and was originally founded in Georgia from 6000BC. The religious root the drink has, caused many to consume in the remembrance of God and this widened the trade across Europe. People consume wine also for its wonderful sweet taste and nutritious properties that are beneficial to health. While there are many types of wines, two of the most famous variants would be the Red and White versions produced mostly in the Europe. Wines are sold at different price ranges depending on its quality, while the least expensive could be as low as $4, the pinnacle of wines could cost beyond $200 per bottle. Given a bottle of wine could be sold for over $200, we decided to conduct analyses to better understand what gives rise to the quality and their associated benefits by assessing publicly available dataset downloaded from UCI Machine Learning Repository.  
+Wine is an alcoholic beverage that has been produced for over thousands of years and was originally founded in Georgia from 6000BC. The religious root the drink has, caused many to consume in the remembrance of God and this widened the trade across Europe. People consume wine also for its wonderful sweet taste and nutritious properties that are beneficial to health. While there are many types of wines, two of the most famous variants would be the Red and White versions produced mostly in the Europe. Wines that were once expensive to buy, are increasingly enjoyed by consumers around the world and the market is expected to grow annually by 7.22% (CAGR 2022-2025)[1]. Wine industries are researching different methods involved in the process of creating and selling wines at the same time retaining its quality to support its growth. Wines are sold at different price ranges depending on its quality, while the least expensive could be as low as $4, the pinnacle of wines could cost beyond $200 per bottle. Given a bottle of wine could be sold for over $200, we decided to conduct analyses to better understand what gives rise to the quality and their associated benefits by assessing publicly available dataset downloaded from UCI Machine Learning Repository.  
 ```{r}
 
 wine <- read.csv(file='winequality-white.csv',
@@ -67,7 +67,7 @@ show(str(wine))
 
 
 
-Before proceeding to the EDA or forming smart questions, it would be appropriate to first understand what each chemical is and its association to wine. The description for each chemical is given below:  
+Before proceeding to the EDA or forming smart questions, it would be appropriate to first understand what each chemical is and its association to wine quality. The description for each chemical is given below:  
 
 Chemical | Description
 -------|-------
@@ -105,7 +105,7 @@ cor <- corrplot.mixed(cor(wine_ind),
 ```
 
 
-```{r}
+```{r, include=F}
 
 # pairs(wine[, cnames_ind[1:(length(cnames_ind)%/%2)]], pch=19,
 #       col=wine$quality,
@@ -115,45 +115,87 @@ cor <- corrplot.mixed(cor(wine_ind),
 
 ```{r}
 
-# Which features play critical role in deciding whether a wine is good
-ggplot(wine, aes(x=quality)) +
-  geom_histogram(fill='blue', alpha=0.5)
-quality_threshold <- 6
-wine.good <- wine[wine[, "quality"] >= quality_threshold, ]
-xkablesummary(wine.good)
-```
+# Boolean indices
+wine.low <- wine[, "quality"] < 5
+wine.medium <- wine[, "quality"] >= 5 & wine[, "quality"] <= 7
+wine.high <- wine[, "quality"] > 7
 
-```{r}
-# Which features play critical role in deciding whether a wine is good
-wine.bad <- wine[wine[, "quality"] < quality_threshold, ]
-xkablesummary(wine.bad)
-```
-
-```{r}
-quality2 <- wine$quality
-quality2[quality2 >= quality_threshold] = 9 # good
-quality2[quality2 < quality_threshold] = 0 # bad
-
-wine2 <- cbind(wine, quality2)
-wine2.colnames <- colnames(wine2)
-wine2.colnames[13] <- 'quality_class'
-colnames(wine2) <- wine2.colnames
-
-plots <- list()
-
-for (i in 1:2)
-{
-  attribute <- wine2.colnames[i]
-  p <- ggplot(wine2, aes(x=quality_class, y=attribute)) +
-       geom_boxplot(aes(group=quality_class, color=quality_class), width=0.9)
-  plots[[i]] <- p
-}
-
-# grid.arrange(plots, nrow=6, ncol=2)
-do.call(grid.arrange, plots)
-
+# Categorise quality into three levels for better comparison
+wine$quality[wine.low] <- 1
+wine$quality[wine.medium] <- 2
+wine$quality[wine.high] <- 3
 
 ```
 
+
+```{r fixed.acidity}
+
+bp.fa <- ggplot(wine, aes(x=quality, y=fixed.acidity, fill=quality, group=quality)) +
+          geom_boxplot(outlier.shape=8, outlier.color='red', color='white') +
+          stat_boxplot(geom='errorbar', width=0.3) +
+         xlab('Quality level') +
+         ylab('Fixed Acidity level') +
+         ggtitle('Fixed Acidity level found in different quality levels of wine')
+
+bp.fa
+```
+
+
+```{r volatile.acidity}
+bp.va <- ggplot(wine, aes(x=quality, y=volatile.acidity, fill=quality, group=quality)) +
+          geom_boxplot(outlier.shape=8, outlier.color='red', color='white') +
+          stat_boxplot(geom='errorbar', width=0.3) +
+         xlab('Quality level') +
+         ylab('Volatile Acidity level') +
+         ggtitle('Volatile Acidity level found in different quality levels of wine')
+
+bp.va
+```
+
+```{r citric.acidity}
+bp.ca <- ggplot(wine, aes(x=quality, y=citric.acid, fill=quality, group=quality)) +
+          geom_boxplot(outlier.shape=8, outlier.color='red', color='white') +
+          stat_boxplot(geom='errorbar', width=0.3) +
+         xlab('Quality level') +
+         ylab('Citric Acid level') +
+         ggtitle('Citric Acid level found in different quality levels of wine')
+
+bp.ca
+```
+
 ```{r}
+bp.rs <- ggplot(wine, aes(x=quality, y=residual.sugar, fill=quality, group=quality)) +
+          geom_boxplot(outlier.shape=8, outlier.color='red', color='white') +
+          stat_boxplot(geom='errorbar', width=0.3) +
+         xlab('Quality level') +
+         ylab('Residual sugar level') +
+         ggtitle('Residual sugar level found in different quality levels of wine')
+
+bp.rs
+```
+
+```{r chloride}
+bp.ch <- ggplot(wine, aes(x=quality, y=chlorides, fill=quality, group=quality)) +
+          geom_boxplot(outlier.shape=8, outlier.color='red', color='white') +
+          stat_boxplot(geom='errorbar', width=0.3) +
+         xlab('Quality level') +
+         ylab('Chloride level') +
+         ggtitle('Chloride level found in different quality levels of wine')
+
+bp.ch
+```
+
+```{r }
+bp.fsd <- ggplot(wine, aes(x=quality, y=free.sulfur.dioxide, fill=quality, group=quality)) +
+          geom_boxplot(outlier.shape=8, outlier.color='red', color='white') +
+          stat_boxplot(geom='errorbar', width=0.3) +
+          xlab('Quality level') +
+          ylab('Chloride level') +
+          ggtitle('Free Sulfur Dioxide level found in different quality levels of wine')
+
+bp.fsd
+```
+
+```{r}
+
 ```
