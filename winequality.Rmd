@@ -81,7 +81,7 @@ density |
 pH | represents how acidic or basic the water is
 sulphates | Substance produced 
 alcohol | Alcohol level in wine
-quality | representing the quality
+quality | represents rating for the quality of the wine
 
 
 ### Prior research and background on domain
@@ -183,6 +183,8 @@ bp.al <- ggplot(wine, aes(x=quality, y=alcohol, color=quality, group=quality)) +
 bp.al
 
 ```
+  
+
 From the above box and whisker plot, better quality is indeed associated with increased level of alcohol level as was our finding from the prior research. Now, it is time to understand the connection between alcohol level and residual sugar as it was understood from the prior research that high alcohol content is produced by the fermentation process by converting grape sugar into ethanol.
 
 ```{r, fig.width=11, fig.height=4}
@@ -190,7 +192,7 @@ sp.al_rs <- ggplot(wine, aes(x=alcohol, y=residual.sugar, color=quality)) +
             geom_point(alpha=0.5) +
             xlab('Alcohol level') +
             ylab('Residual Sugar') +
-            labs('Correlation between alcohol and residual sugar levels')
+            ggtitle('Correlation between alcohol and residual sugar levels')
 
 bp.rs <- ggplot(wine, aes(x=quality, y=residual.sugar, color=quality, group=quality)) +
          geom_boxplot(outlier.shape=8, outlier.color='red') +
@@ -200,6 +202,44 @@ bp.rs <- ggplot(wine, aes(x=quality, y=residual.sugar, color=quality, group=qual
          ggtitle('Residual sugar level found in different quality levels of wine')
 
 grid.arrange(sp.al_rs, bp.rs, nrow=1)
+
+```
+It is surprising that our expectation was not backed by the results conveyed by the plots above, but we think the type of wine is what must be held accountable for this finding. As mentioned earlier, we should not only note the sweeter the wine the higher the alcohol level, but lighter wines i.e., those with ABV $<= 11.5\%$ tend to exhibit more fresh notes with high level of acidity rather than being more sweet. 
+
+We believe it would be relevant to first see the distribution of alcohol level in both white and red wine, which may shed more light onto understanding why positive correlation was found between Alcohol and residual sugar levels.  
+
+```{r delete}
+
+plot(wine$residual.sugar~wine$alcohol, col='yellow')
+plot(redwine$residual.sugar~redwine$alcohol, col='red', add=T)
+```
+
+
+```{r}
+
+redwine <- read.csv(file='winequality-red.csv',
+                 header=T,
+                 sep=";",
+                 fill=T,
+                 strip.white=T,
+                 blank.lines.skip=T,
+                 colClasses = c('quality'='factor'))
+
+white_alc <- hist(wine$alcohol)
+red_alc <- hist(redwine$alcohol)
+
+plot(white_alc, col=rgb(1, 1, 0.2), alpha=0.1)
+plot(red_alc, col=rgb(0.5, 0, 0), add=T)
+
+
+  
+# ggplot(wine, aes(x=alcohol, )) +
+# geom_histogram(color='white')+
+# # density(aes(x=..count..)) +
+# xlab('Alcohol level') +
+# ylab('Freq Count') +
+# ggtitle('Alcohol level distribution')
+
 
 ```
 
