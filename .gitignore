@@ -1,3 +1,4 @@
 # Lets ignore Rproj files so that we can have our own versions
 *.Rproj
 .Rproj.user
+*.html
