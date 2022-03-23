@@ -55,6 +55,14 @@ wine <- read.csv(file='winequality-white.csv',
 cnames <- colnames(wine)
 cnames_ind <- head(cnames, length(cnames)-1)
 wine_ind <- wine[, cnames_ind]
+
+redwine <- read.csv(file='winequality-red.csv',
+                 header=T,
+                 sep=";",
+                 fill=T,
+                 strip.white=T,
+                 blank.lines.skip=T,
+                 colClasses = c('quality'='factor'))
 ```
 # Chapter 2: Description of the data  
 
@@ -192,7 +200,9 @@ sp.al_rs <- ggplot(wine, aes(x=alcohol, y=residual.sugar, color=quality)) +
             geom_point(alpha=0.5) +
             xlab('Alcohol level') +
             ylab('Residual Sugar') +
-            ggtitle('Correlation between alcohol and residual sugar levels')
+            ggtitle('Correlation between alcohol and residual sugar levels') +
+            theme(legend.position='left')
+sp.al_rs <- ggMarginal(sp.al_rs, type='boxplot', fill='darkgray')
 
 bp.rs <- ggplot(wine, aes(x=quality, y=residual.sugar, color=quality, group=quality)) +
          geom_boxplot(outlier.shape=8, outlier.color='red') +
@@ -204,43 +214,76 @@ bp.rs <- ggplot(wine, aes(x=quality, y=residual.sugar, color=quality, group=qual
 grid.arrange(sp.al_rs, bp.rs, nrow=1)
 
 ```
-It is surprising that our expectation was not backed by the results conveyed by the plots above, but we think the type of wine is what must be held accountable for this finding. As mentioned earlier, we should not only note the sweeter the wine the higher the alcohol level, but lighter wines i.e., those with ABV $<= 11.5\%$ tend to exhibit more fresh notes with high level of acidity rather than being more sweet. 
+It is surprising that our expectation was not backed by the results conveyed by the plots above, but we think there are two things that must be held accountable for this finding:  
 
-We believe it would be relevant to first see the distribution of alcohol level in both white and red wine, which may shed more light onto understanding why positive correlation was found between Alcohol and residual sugar levels.  
+1. Residual sugar is not the same as sugar level in the grapes.
 
-```{r delete}
+**Terminology Alert**  
+Residual sugar represents the amount of sugar that is left after the fermentation process.  
 
-plot(wine$residual.sugar~wine$alcohol, col='yellow')
-plot(redwine$residual.sugar~redwine$alcohol, col='red', add=T)
+
+We are not sure at this point whether this can directly represent the level of sweetness in the wine as it could be inversely proportional. What we mean by that is the residual sugar level does not necessary allow us to infer what the original sugar level was in the grape juice prior to the fermentation process. Hence, we believe it would be safe to presume that the lesser the residual sugar level is the higher the sugar got decomposed into alcohol and this is evident from the above plot. Also the correlation between alcohol level and the residual sugar is `r cor(wine$alcohol, wine$residual.sugar)`
+
+2. The type of wine is what must be held accountable for this finding.  
+
+```{r}
+
+subset1 <- wine[, c('alcohol', 'residual.sugar')]
+subset1 <- cbind(subset1, rep('white', nrow(subset1)))
+colnames(subset1) <- c('alcohol', 'residual.sugar', 'wine.type')
+
+subset2 <- redwine[, c('alcohol', 'residual.sugar')]
+subset2 <- cbind(subset2, rep('red', nrow(subset2)))
+colnames(subset2) <- c('alcohol', 'residual.sugar', 'wine.type')
+
+tmp_subset <- rbind(subset1, subset2)
+# tmp_subset$wine.type <- factor(tmp_subset$wine.type, levels=c('red', 'white'), ordered = T)
+
+sp.al_rs <- ggplot(tmp_subset, aes(x=alcohol, y=residual.sugar, color=wine.type)) +
+            geom_point() +
+            xlab('Alcohol level') +
+            ylab('Residual Sugar level') +
+            ggtitle('Correlation between alcohol and residual sugar level in white & red wines')# +
+            # theme(legend.position='left')
+
+sp.al_rs
+
+# sp.al_rs <- ggMarginal(sp.al_rs, type='boxplot', fill='darkgray', )
+# sp.al_rs
+            
+# ggplot(tmp_subset, aes(x=wine.type, y=residual.sugar, color=wine.type)) +
+# geom_boxplot(outlier.shape=8, outlier.color='red') +
+# stat_boxplot(geom ='errorbar', width=0.5) +
+# xlab('Wine type') +
+# ylab('Residual sugar level distribution')
+# ggtitle('Residual sugar level between white & red wines')
+  
 ```
+
+This plot confirms the hypothesis we made in the last statement. As mentioned earlier, we should not only note the sweeter the wine the higher the alcohol level, but lighter wines i.e., those with ABV $<= 11.5\%$ tend to exhibit more fresh notes with high level of acidity rather than being more sweet. This is the case in particular with white wine and is evident from the scatter plot above that red wines contain less residual sugar compared to that found in white wine.  
 
 
 ```{r}
 
-redwine <- read.csv(file='winequality-red.csv',
-                 header=T,
-                 sep=";",
-                 fill=T,
-                 strip.white=T,
-                 blank.lines.skip=T,
-                 colClasses = c('quality'='factor'))
+tmp_subset2 <- tmp_subset
+tmp_subset2$wine.type <- factor(tmp_subset$wine.type, levels=c('white', 'red'), ordered=T)
+ggplot(tmp_subset2, aes(x=wine.type, y=alcohol, color=wine.type, group=wine.type)) +
+geom_boxplot(outlier.shape=8, outlier.color='red') +
+stat_boxplot(geom='errorbar') +
+xlab('Wine Type') +
+ylab('Alcohol level distribution') +
+ggtitle('Alcohol level in red and white wines')
 
-white_alc <- hist(wine$alcohol)
-red_alc <- hist(redwine$alcohol)
 
+
+```
+It is understood that red wine has more alcohol than the white wine. 
+[Masterclass](https://www.masterclass.com/articles/learn-about-alcohol-content-in-wine-highest-to-lowest-abv-wines#does-white-wine-or-red-wine-have-higher-alcohol-content)
+
+
+```{r}
 plot(white_alc, col=rgb(1, 1, 0.2), alpha=0.1)
 plot(red_alc, col=rgb(0.5, 0, 0), add=T)
-
-
-  
-# ggplot(wine, aes(x=alcohol, )) +
-# geom_histogram(color='white')+
-# # density(aes(x=..count..)) +
-# xlab('Alcohol level') +
-# ylab('Freq Count') +
-# ggtitle('Alcohol level distribution')
-
-
 ```
 
 ```{r fixed.acidity}
