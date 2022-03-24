@@ -230,18 +230,18 @@ We are not sure at this point whether this can directly represent the level of s
 
 ```{r}
 
-subset1 <- wine[, c('alcohol', 'residual.sugar')]
-subset1 <- cbind(subset1, rep('white', nrow(subset1)))
-colnames(subset1) <- c('alcohol', 'residual.sugar', 'wine.type')
+wine.colnames <- colnames(wine)
+wine.colnames <- c(wine.colnames, 'wine.type')
+wine1 <- cbind(wine, rep('white', nrow(wine)))
+colnames(wine1) <- wine.colnames
 
-subset2 <- redwine[, c('alcohol', 'residual.sugar')]
-subset2 <- cbind(subset2, rep('red', nrow(subset2)))
-colnames(subset2) <- c('alcohol', 'residual.sugar', 'wine.type')
+wine2 <- cbind(redwine, rep('red', nrow(redwine)))
+colnames(wine2) <- wine.colnames
 
-tmp_subset <- rbind(subset1, subset2)
+wine.collated <- rbind(wine1, wine2)
 # tmp_subset$wine.type <- factor(tmp_subset$wine.type, levels=c('red', 'white'), ordered = T)
 
-sp.al_rs <- ggplot(tmp_subset, aes(x=alcohol, y=residual.sugar, color=wine.type)) +
+sp.al_rs <- ggplot(wine.collated, aes(x=alcohol, y=residual.sugar, color=wine.type)) +
             geom_point() +
             xlab('Alcohol level') +
             ylab('Residual Sugar level') +
@@ -267,9 +267,7 @@ This plot confirms the hypothesis we made in the last statement. As mentioned ea
 
 ```{r}
 
-tmp_subset2 <- tmp_subset
-tmp_subset2$wine.type <- factor(tmp_subset$wine.type, levels=c('white', 'red'), ordered=T)
-ggplot(tmp_subset2, aes(x=wine.type, y=alcohol, color=wine.type, group=wine.type)) +
+ggplot(wine.collated, aes(x=wine.type, y=alcohol, color=wine.type, group=wine.type)) +
 geom_boxplot(outlier.shape=8, outlier.color='red') +
 stat_boxplot(geom='errorbar') +
 xlab('Wine Type') +
@@ -304,9 +302,40 @@ bp.ph.red <-   ggplot(redwine, aes(x=quality, y=pH, color=quality)) +
 grid.arrange(bp.ph.white, bp.ph.red, nrow=1)
 
 
+
 ```
 **Terminology Alert**  
 pH level refers to how basic or acidic the liquid is. While a lower pH level means the liquid is more acidic, higher level represents how basic or alkaline a water is.
+
+```{r aggregation, include=F}
+white.wine.quality <- unique(wine$quality)
+white.grouped <- data.frame(nrow=1, ncol=length(white.wine.quality))
+colnames(white.grouped) <- as.character(white.wine.quality)
+
+red.wine.quality <- unique(redwine$quality)
+red.grouped <- data.frame(nrow=1)
+colnames(red.grouped) <- as.character(red.wine.quality)
+
+for(i in 1:length(white.wine.quality))
+{
+  white_quality <- white.wine.quality[i]
+  white.grouped[1, white_quality] <- mean(wine[wine[, 'quality']==white_quality, ]$pH)
+}
+
+for(i in 1:length(red.wine.quality))
+{
+  red_quality <- red.wine.quality[i]
+  red.grouped[1, red_quality] <- mean(redwine[redwine[, 'quality']==red_quality, ]$pH)
+}
+
+wine.grouped <- rbind(white.wine.grouped, red.wine.grouped)
+```
+
+
+```{r ph_stacked_bar}
+ggplot(data.frame(wine.grouped), aes(x=quality, y=pH, fill=wine.type)) +
+geom_bar(position='stack', stat='identity')
+```
 
 ```{r fixed.acidity}
 
