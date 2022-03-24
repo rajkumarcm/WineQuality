@@ -310,25 +310,25 @@ pH level refers to how basic or acidic the liquid is. While a lower pH level mea
 ```{r aggregation, include=F}
 white.wine.quality <- unique(wine$quality)
 white.grouped <- data.frame(nrow=1, ncol=length(white.wine.quality))
-colnames(white.grouped) <- as.character(white.wine.quality)
 
 red.wine.quality <- unique(redwine$quality)
-red.grouped <- data.frame(nrow=1)
-colnames(red.grouped) <- as.character(red.wine.quality)
+red.grouped <- data.frame(nrow=1, ncol=length(red.wine.quality))
 
 for(i in 1:length(white.wine.quality))
 {
   white_quality <- white.wine.quality[i]
-  white.grouped[1, white_quality] <- mean(wine[wine[, 'quality']==white_quality, ]$pH)
+  white.grouped[1, i] <- mean(wine[wine[, 'quality']==white_quality, ]$pH)
 }
+colnames(white.grouped) <- as.character(white.wine.quality)
 
 for(i in 1:length(red.wine.quality))
 {
   red_quality <- red.wine.quality[i]
-  red.grouped[1, red_quality] <- mean(redwine[redwine[, 'quality']==red_quality, ]$pH)
+  red.grouped[1, i] <- mean(redwine[redwine[, 'quality']==red_quality, ]$pH)
 }
 
-wine.grouped <- rbind(white.wine.grouped, red.wine.grouped)
+colnames(red.grouped) <- red.wine.quality
+wine.grouped <- rbind(white.grouped, red.grouped)
 ```
 
 
