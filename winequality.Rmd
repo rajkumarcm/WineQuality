@@ -39,6 +39,7 @@ library(gridExtra)
 library(ezids)
 library(lattice)
 library(corrplot)
+library(tidyverse)
 ```
 # Chapter 1: Introduction  
 
@@ -115,7 +116,7 @@ It is also believed, without drifting far from the scope of this analysis, that 
 
 1. How does the alcohol content affect the quality?
 2. How does the ph level within the wine affect its quality?
-3. Are the different acidity levels that are heavily correlated and how do they affect quality?
+3. Are there different acidity levels that are heavily correlated and how do they affect quality?
 4. Can we describe an example for a high quality Vinho verde?
 5. Are there any independent variables that are highly correlated with each other ?
 6. Do the mean chemical levels for different wine quality remain the same ?
@@ -128,7 +129,7 @@ It is also believed, without drifting far from the scope of this analysis, that 
 ```{r}
 # May be we should start using bar instead of histogram as this looks so ugly
 ggplot(wine, aes(quality)) +
-  geom_bar(color='white', alpha=0.6) +
+  geom_bar(color='white', alpha=0.7) +
   xlab('Quality') +
   ylab('Frequency rate') +
   labs('Quality distribution')
@@ -142,30 +143,6 @@ Visualizing highly correlated features
 pairs(wine)
 ```
 
-
-```{r, include=F}
-
-# pairs(wine[, cnames_ind[1:(length(cnames_ind)%/%2)]], pch=19,
-#       col=wine$quality,
-#       lower.panel=NULL)
-```
-
-```{r}
-
-# # Boolean indices
-# wine.low <- wine[, "quality"] < 5
-# wine.medium <- wine[, "quality"] >= 5 & wine[, "quality"] <= 7
-# wine.high <- wine[, "quality"] > 7
-# 
-# # Categorise quality into three levels for better comparison
-# # wine.res = wine restructured
-# wine.res <- wine
-# wine.res$quality[wine.low] <- 1
-# wine.res$quality[wine.medium] <- 2
-# wine.res$quality[wine.high] <- 3
-
-
-```
 
 ```{r, include=F, fig.width=11}
 
@@ -228,10 +205,11 @@ We are not sure at this point whether this can directly represent the level of s
 
 2. The type of wine is what must be held accountable for this finding.  
 
-```{r}
+```{r wine.collated}
 
 wine.colnames <- colnames(wine)
 wine.colnames <- c(wine.colnames, 'wine.type')
+
 wine1 <- cbind(wine, rep('white', nrow(wine)))
 colnames(wine1) <- wine.colnames
 
@@ -239,27 +217,15 @@ wine2 <- cbind(redwine, rep('red', nrow(redwine)))
 colnames(wine2) <- wine.colnames
 
 wine.collated <- rbind(wine1, wine2)
-# tmp_subset$wine.type <- factor(tmp_subset$wine.type, levels=c('red', 'white'), ordered = T)
 
 sp.al_rs <- ggplot(wine.collated, aes(x=alcohol, y=residual.sugar, color=wine.type)) +
             geom_point() +
             xlab('Alcohol level') +
             ylab('Residual Sugar level') +
-            ggtitle('Correlation between alcohol and residual sugar level in white & red wines')# +
-            # theme(legend.position='left')
-
+            ggtitle('Correlation between alcohol and residual sugar level in white & red wines')
+            
 sp.al_rs
 
-# sp.al_rs <- ggMarginal(sp.al_rs, type='boxplot', fill='darkgray', )
-# sp.al_rs
-            
-# ggplot(tmp_subset, aes(x=wine.type, y=residual.sugar, color=wine.type)) +
-# geom_boxplot(outlier.shape=8, outlier.color='red') +
-# stat_boxplot(geom ='errorbar', width=0.5) +
-# xlab('Wine type') +
-# ylab('Residual sugar level distribution')
-# ggtitle('Residual sugar level between white & red wines')
-  
 ```
 
 This plot confirms the hypothesis we made in the last statement. As mentioned earlier, we should not only note the sweeter the wine the higher the alcohol level, but lighter wines i.e., those with ABV $<= 11.5\%$ tend to exhibit more fresh notes with high level of acidity rather than being more sweet. This is the case in particular with white wine and is evident from the scatter plot above that red wines contain less residual sugar compared to that found in white wine.  
@@ -267,14 +233,12 @@ This plot confirms the hypothesis we made in the last statement. As mentioned ea
 
 ```{r}
 
-ggplot(wine.collated, aes(x=wine.type, y=alcohol, color=wine.type, group=wine.type)) +
+ggplot(wine.collated, aes(x=wine.type, y=alcohol, color=wine.type)) +
 geom_boxplot(outlier.shape=8, outlier.color='red') +
 stat_boxplot(geom='errorbar') +
 xlab('Wine Type') +
 ylab('Alcohol level distribution') +
 ggtitle('Alcohol level in red and white wines')
-
-
 
 ```
 It is understood that red wine typically has more alcohol than the white wine [Masterclass](https://www.masterclass.com/articles/learn-about-alcohol-content-in-wine-highest-to-lowest-abv-wines#does-white-wine-or-red-wine-have-higher-alcohol-content) but the above boxplot shows the opposite. 
@@ -305,37 +269,38 @@ grid.arrange(bp.ph.white, bp.ph.red, nrow=1)
 
 ```
 **Terminology Alert**  
-pH level refers to how basic or acidic the liquid is. While a lower pH level means the liquid is more acidic, higher level represents how basic or alkaline a water is.
+pH level refers to how basic or acidic the liquid is. While a lower pH level means the liquid is more acidic, higher level represents how basic or alkaline the water is.
 
-```{r aggregation, include=F}
-white.wine.quality <- unique(wine$quality)
-white.grouped <- data.frame(nrow=1, ncol=length(white.wine.quality))
+```{r}
+# wine.1 represents white wine dataset
+by_quality <- wine1 %>% group_by(quality)
+wine1.summary <- by_quality %>% summarise(pH = mean(pH))
+wine1.summary <- cbind(wine1.summary, rep('white', nrow(wine1.summary)))
+colnames(wine1.summary) <- c('quality', 'pH', 'wine.type')
 
-red.wine.quality <- unique(redwine$quality)
-red.grouped <- data.frame(nrow=1, ncol=length(red.wine.quality))
+# wine.2 represents red wine dataset
+by_quality <- wine2 %>% group_by(quality)
+wine2.summary <- by_quality %>% summarise(pH = mean(pH))
+wine2.summary <- cbind(wine2.summary, rep('red', nrow(wine2.summary)))
+colnames(wine2.summary) <- c('quality', 'pH', 'wine.type')
 
-for(i in 1:length(white.wine.quality))
-{
-  white_quality <- white.wine.quality[i]
-  white.grouped[1, i] <- mean(wine[wine[, 'quality']==white_quality, ]$pH)
-}
-colnames(white.grouped) <- as.character(white.wine.quality)
+# combine white and red wine dataset together
+wine.summary <- rbind(wine1.summary, wine2.summary)
 
-for(i in 1:length(red.wine.quality))
-{
-  red_quality <- red.wine.quality[i]
-  red.grouped[1, i] <- mean(redwine[redwine[, 'quality']==red_quality, ]$pH)
-}
-
-colnames(red.grouped) <- red.wine.quality
-wine.grouped <- rbind(white.grouped, red.grouped)
 ```
 
+```{r, fig.height=4, fig.width=11}
+grouped_bar <- ggplot(wine.summary, aes(x=quality, y=pH, fill=wine.type)) +
+               geom_bar(position="dodge", stat="identity") +
+               ggtitle('Average pH level')
 
-```{r ph_stacked_bar}
-ggplot(data.frame(wine.grouped), aes(x=quality, y=pH, fill=wine.type)) +
-geom_bar(position='stack', stat='identity')
+line_plot <- ggplot(wine.summary, aes(x=quality, y=pH, group=wine.type, color=wine.type)) +
+             geom_point() +
+             geom_line()
+
+grid.arrange(grouped_bar, line_plot, nrow=1)
 ```
+The result conveyed by the above bar plot confirms the hypothesis that white wine is more acidic compared to red wine.
 
 ```{r fixed.acidity}
 
