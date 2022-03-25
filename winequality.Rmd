@@ -125,10 +125,23 @@ It is also believed, without drifting far from the scope of this analysis, that 
 
 # Chapter 4: Exploratory Data Analysis
 
+```{r, include=F}
+wine.colnames <- colnames(wine)
+wine.colnames <- c(wine.colnames, 'wine.type')
+
+wine1 <- cbind(wine, rep('white', nrow(wine)))
+colnames(wine1) <- wine.colnames
+
+wine2 <- cbind(redwine, rep('red', nrow(redwine)))
+colnames(wine2) <- wine.colnames
+
+wine.collated <- rbind(wine1, wine2)
+```
+
 ## Wine Quality distribution
 ```{r}
 # May be we should start using bar instead of histogram as this looks so ugly
-ggplot(wine, aes(quality)) +
+ggplot(wine.collated, aes(quality, fill=wine.type)) +
   geom_bar(color='white', alpha=0.7) +
   xlab('Quality') +
   ylab('Frequency rate') +
@@ -165,7 +178,7 @@ bp.al <- ggplot(wine, aes(x=quality, y=alcohol, color=quality, group=quality)) +
          stat_boxplot(geom='errorbar', width=0.3) +
          xlab('Quality level') +
          ylab('Alcohol level') +
-         ggtitle('Alcohol level found in different quality levels of wine')
+         ggtitle('Alcohol level found in different quality levels of white wine')
 
 bp.al
 
@@ -205,18 +218,7 @@ We are not sure at this point whether this can directly represent the level of s
 
 2. The type of wine is what must be held accountable for this finding.  
 
-```{r wine.collated}
-
-wine.colnames <- colnames(wine)
-wine.colnames <- c(wine.colnames, 'wine.type')
-
-wine1 <- cbind(wine, rep('white', nrow(wine)))
-colnames(wine1) <- wine.colnames
-
-wine2 <- cbind(redwine, rep('red', nrow(redwine)))
-colnames(wine2) <- wine.colnames
-
-wine.collated <- rbind(wine1, wine2)
+```{r alcohol_residual_sugar}
 
 sp.al_rs <- ggplot(wine.collated, aes(x=alcohol, y=residual.sugar, color=wine.type)) +
             geom_point() +
@@ -255,8 +257,9 @@ pH level refers to how basic or acidic the liquid is. While a lower pH level mea
 
 ```{r}
 ggplot(wine.collated, aes(x=wine.type, y=pH, color=wine.type)) +
-geom_boxplot() +
-stat_boxplot(geom='errorbar')
+geom_boxplot(outlier.shape=8, outlier.color='red') +
+stat_boxplot(geom='errorbar', width=0.5) +
+ggtitle('Distribution of pH level in wine')
 
 ```
 The above boxplot between white and red wine confirms our hypothesis that white wine is more acidic compared to that of red wine, but what constitutes to the quality is the question. In order to answer, it would be first relevant to see how the pH level varies across different quality levels.  
@@ -323,20 +326,25 @@ cplot <- corrplot(cor(wine[, acidity_cnames]),
                   type='upper',
                   method='number')
 
-xkablesummary(wine[, acidity_cnames])
-
 ```
 
-```{r fixed.acidity}
+As can be seen from the above correlation plot, the acidity levels are not correlated with each other.  
+
+```{r fixed.acidity, fig.width=11, fig.height=4}
 
 bp.fa <- ggplot(wine, aes(x=quality, y=fixed.acidity, color=quality, group=quality)) +
          geom_boxplot(outlier.shape=8, outlier.color='red') +
          stat_boxplot(geom='errorbar', width=0.3) +
          xlab('Quality level') +
-         ylab('Fixed Acidity level') +
-         ggtitle('Fixed Acidity level found in different quality levels of wine')
+         ylab(TeX('Fixed Acidity level $x 10^{3} mg/L $')) +
+         ggtitle("Distribution of fixed acidity per quality level")
 
-bp.fa
+bp.fa_wr <- ggplot(wine.collated, aes(x=wine.type, y=fixed.acidity, color=wine.type)) +
+            geom_boxplot(outlier.shape=8, outlier.color='red') +
+            stat_boxplot(geom='errorbar', width=0.3) +
+            ggtitle('Distribution of fixed acidity in white and red')
+
+grid.arrange(bp.fa_wr, bp.fa, nrow=1)
 ```
 
 
