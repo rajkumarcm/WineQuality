@@ -241,6 +241,8 @@ ylab('Alcohol level distribution') +
 ggtitle('Alcohol level in red and white wines')
 
 ```
+
+
 It is understood that red wine typically has more alcohol than the white wine [Masterclass](https://www.masterclass.com/articles/learn-about-alcohol-content-in-wine-highest-to-lowest-abv-wines#does-white-wine-or-red-wine-have-higher-alcohol-content) but the above boxplot shows the opposite. 
 
 ***DO YOU WANT TO ADD THIS LINE***
@@ -279,8 +281,9 @@ bp.ph.white
 # grid.arrange(bp.ph.white, bp.ph.red, nrow=1)
 
 ```
+At this point, we believe pH is just one of the factors and is not directly related to quality as both low and high quality wines have similar pH level. We believe there must be other factors that affect the overall quality.  
 
-```{r}
+```{r, include=F}
 # wine.1 represents white wine dataset
 by_quality <- wine1 %>% group_by(quality)
 wine1.summary <- by_quality %>% summarise(pH = mean(pH))
@@ -298,7 +301,7 @@ wine.summary <- rbind(wine1.summary, wine2.summary)
 
 ```
 
-```{r, fig.height=4, fig.width=11}
+```{r, include=F, fig.height=4, fig.width=11}
 grouped_bar <- ggplot(wine.summary, aes(x=quality, y=pH, fill=wine.type)) +
                geom_bar(position="dodge", stat="identity") +
                ggtitle('Average pH level')
@@ -309,11 +312,19 @@ line_plot <- ggplot(wine.summary, aes(x=quality, y=pH, group=wine.type, color=wi
 
 grid.arrange(grouped_bar, line_plot, nrow=1)
 ```
-```{r correlation}
+
+
+### Are there different acidity levels that are heavily correlated and how do they affect quality?  
+
+```{r correlation, results='asis'}
+
 acidity_cnames <- c('fixed.acidity', 'volatile.acidity', 'citric.acid')
-corrplot(cor(wine[, acidity_cnames]),
-         type='upper',
-         method='number')
+cplot <- corrplot(cor(wine[, acidity_cnames]),
+                  type='upper',
+                  method='number')
+
+xkablesummary(wine[, acidity_cnames])
+
 ```
 
 ```{r fixed.acidity}
