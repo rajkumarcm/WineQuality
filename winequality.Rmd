@@ -246,30 +246,39 @@ It is understood that red wine typically has more alcohol than the white wine [M
 ***DO YOU WANT TO ADD THIS LINE***
 Perhaps the dataset for red wine is only a fraction of what we have for white wine that is causing confusion.  
 
-### How does the pH level affect the wine quality?
+### How does the pH level affect the wine quality?  
 
-```{r, fig.width=11, fig.height=4}
+**Terminology Alert**  
+pH level refers to how basic or acidic the liquid is. While a lower pH level means the liquid is more acidic, higher level represents how basic or alkaline the water is.  
+
+```{r}
+ggplot(wine.collated, aes(x=wine.type, y=pH, color=wine.type)) +
+geom_boxplot() +
+stat_boxplot(geom='errorbar')
+
+```
+The above boxplot between white and red wine confirms our hypothesis that white wine is more acidic compared to that of red wine, but what constitutes to the quality is the question. In order to answer, it would be first relevant to see how the pH level varies across different quality levels.  
+
+```{r, }
+#fig.width=11, fig.height=4
 bp.ph.white <- ggplot(wine, aes(x=quality, y=pH, color=quality)) +
                geom_boxplot(outlier.shape=8, outlier.color='red') +
                stat_boxplot(geom='errorbar') +
                xlab('Quality') +
                ylab('pH') +
                ggtitle('Distribution of pH level in white wine')
+bp.ph.white
 
-bp.ph.red <-   ggplot(redwine, aes(x=quality, y=pH, color=quality)) +
-               geom_boxplot(outlier.shape=8, outlier.color='red') +
-               stat_boxplot(geom='errorbar') +
-               xlab('Quality') +
-               ylab('pH') +
-               ggtitle('Distribution of pH level in red wine')
-
-grid.arrange(bp.ph.white, bp.ph.red, nrow=1)
-
-
+# bp.ph.red <-   ggplot(redwine, aes(x=quality, y=pH, color=quality)) +
+#                geom_boxplot(outlier.shape=8, outlier.color='red') +
+#                stat_boxplot(geom='errorbar') +
+#                xlab('Quality') +
+#                ylab('pH') +
+#                ggtitle('Distribution of pH level in red wine')
+# 
+# grid.arrange(bp.ph.white, bp.ph.red, nrow=1)
 
 ```
-**Terminology Alert**  
-pH level refers to how basic or acidic the liquid is. While a lower pH level means the liquid is more acidic, higher level represents how basic or alkaline the water is.
 
 ```{r}
 # wine.1 represents white wine dataset
@@ -300,7 +309,12 @@ line_plot <- ggplot(wine.summary, aes(x=quality, y=pH, group=wine.type, color=wi
 
 grid.arrange(grouped_bar, line_plot, nrow=1)
 ```
-The result conveyed by the above bar plot confirms the hypothesis that white wine is more acidic compared to red wine.
+```{r correlation}
+acidity_cnames <- c('fixed.acidity', 'volatile.acidity', 'citric.acid')
+corrplot(cor(wine[, acidity_cnames]),
+         type='upper',
+         method='number')
+```
 
 ```{r fixed.acidity}
 
