@@ -40,6 +40,7 @@ library(ezids)
 library(lattice)
 library(corrplot)
 library(tidyverse)
+library(latex2exp)
 ```
 # Chapter 1: Introduction  
 
@@ -177,7 +178,7 @@ bp.al <- ggplot(wine, aes(x=quality, y=alcohol, color=quality, group=quality)) +
          geom_boxplot(outlier.shape=8, outlier.color='red') +
          stat_boxplot(geom='errorbar', width=0.3) +
          xlab('Quality level') +
-         ylab('Alcohol level') +
+         ylab("Alcohol level %") +
          ggtitle('Alcohol level found in different quality levels of white wine')
 
 bp.al
@@ -227,6 +228,9 @@ sp.al_rs <- ggplot(wine.collated, aes(x=alcohol, y=residual.sugar, color=wine.ty
             ggtitle('Correlation between alcohol and residual sugar level in white & red wines')
             
 sp.al_rs
+
+ggplot(wine.collated, aes(x=alcohol, y=..density.., fill=wine.type, color='white')) +
+geom_histogram()
 
 ```
 
@@ -286,7 +290,7 @@ bp.ph.white
 ```
 At this point, we believe pH is just one of the factors and is not directly related to quality as both low and high quality wines have similar pH level. We believe there must be other factors that affect the overall quality.  
 
-```{r, include=F}
+```{r, include=T}
 # wine.1 represents white wine dataset
 by_quality <- wine1 %>% group_by(quality)
 wine1.summary <- by_quality %>% summarise(pH = mean(pH))
@@ -304,7 +308,7 @@ wine.summary <- rbind(wine1.summary, wine2.summary)
 
 ```
 
-```{r, include=F, fig.height=4, fig.width=11}
+```{r, include=T, fig.height=4, fig.width=11}
 grouped_bar <- ggplot(wine.summary, aes(x=quality, y=pH, fill=wine.type)) +
                geom_bar(position="dodge", stat="identity") +
                ggtitle('Average pH level')
@@ -324,7 +328,7 @@ grid.arrange(grouped_bar, line_plot, nrow=1)
 acidity_cnames <- c('fixed.acidity', 'volatile.acidity', 'citric.acid')
 cplot <- corrplot(cor(wine[, acidity_cnames]),
                   type='upper',
-                  method='number')
+                  method='circle')
 
 ```
 
@@ -337,65 +341,101 @@ bp.fa <- ggplot(wine, aes(x=quality, y=fixed.acidity, color=quality, group=quali
          stat_boxplot(geom='errorbar', width=0.3) +
          xlab('Quality level') +
          ylab(TeX('Fixed Acidity level $x 10^{3} mg/L $')) +
-         ggtitle("Distribution of fixed acidity per quality level")
+         ggtitle("Distribution of fixed acidity in white wine")
+
+bp.fa.red <- ggplot(redwine, aes(x=quality, y=fixed.acidity, color=quality, group=quality)) +
+             geom_boxplot(outlier.shape=8, outlier.color='red') +
+             stat_boxplot(geom='errorbar', width=0.3) +
+             xlab('Quality level') +
+             ylab(TeX('Fixed Acidity level $x 10^{3} mg/L $')) +
+             ggtitle("Distribution of fixed acidity in red wine")
 
 bp.fa_wr <- ggplot(wine.collated, aes(x=wine.type, y=fixed.acidity, color=wine.type)) +
             geom_boxplot(outlier.shape=8, outlier.color='red') +
             stat_boxplot(geom='errorbar', width=0.3) +
             ggtitle('Distribution of fixed acidity in white and red')
 
-grid.arrange(bp.fa_wr, bp.fa, nrow=1)
+grid.arrange(bp.fa.red, bp.fa, nrow=1)
 ```
 
+### Are there any independent variables that are highly correlated with each other ?  
+
+```{r, results='asis'}
+ind_cnames <- colnames(wine)
+ind_cnames <- ind_cnames[1:length(ind_cnames)-1]
+corrplot(cor(wine[, ind_cnames]),
+         type='upper',
+         method='circle')
+```
+
+--------- REMOVE DENSITY VARIABLE AS IT IS HIGHLY CORRELATED WITH RESIDUAL SUGAR
 
 ```{r volatile.acidity}
-bp.va <- ggplot(wine, aes(x=quality, y=volatile.acidity, fill=quality, group=quality)) +
-          geom_boxplot(outlier.shape=8, outlier.color='red', color='white') +
+bp.va <- ggplot(wine, aes(x=quality, y=volatile.acidity, color=quality)) +
+          geom_boxplot(outlier.shape=8, outlier.color='red') +
           stat_boxplot(geom='errorbar', width=0.3) +
-         xlab('Quality level') +
-         ylab('Volatile Acidity level') +
-         ggtitle('Volatile Acidity level found in different quality levels of wine')
+           xlab('Quality level') +
+           ylab('Volatile Acidity level') +
+           ggtitle('Volatile Acidity level')
 
 bp.va
 ```
 
 ```{r citric.acidity}
-bp.ca <- ggplot(wine, aes(x=quality, y=citric.acid, fill=quality, group=quality)) +
-          geom_boxplot(outlier.shape=8, outlier.color='red', color='white') +
+bp.ca <- ggplot(wine, aes(x=quality, y=citric.acid, color=quality)) +
+          geom_boxplot(outlier.shape=8, outlier.color='red') +
           stat_boxplot(geom='errorbar', width=0.3) +
          xlab('Quality level') +
          ylab('Citric Acid level') +
-         ggtitle('Citric Acid level found in different quality levels of wine')
+         ggtitle('Citric Acid level')
 
 bp.ca
 ```
 
-```{r}
 
-```
 
-```{r chloride}
-bp.ch <- ggplot(wine, aes(x=quality, y=chlorides, fill=quality, group=quality)) +
-          geom_boxplot(outlier.shape=8, outlier.color='red', color='white') +
-          stat_boxplot(geom='errorbar', width=0.3) +
-         xlab('Quality level') +
-         ylab('Chloride level') +
-         ggtitle('Chloride level found in different quality levels of wine')
+```{r chloride, fig.width=11, fig.height=4}
 
-bp.ch
+bp.ch <- ggplot(wine, aes(x=quality, y=chlorides, color=quality)) +
+                geom_boxplot(outlier.shape=8, outlier.color='red') +
+                stat_boxplot(geom='errorbar', width=0.3) +
+                xlab('Quality level') +
+                ylab('Chloride level') +
+                ggtitle('Chloride level')
+
+
+bp.ch.log <- ggplot(wine, aes(x=quality, y=log(chlorides), color=quality)) +
+             geom_boxplot(outlier.shape=8, outlier.color='red') +
+             stat_boxplot(geom='errorbar', width=0.3) +
+             xlab('Quality level') +
+             ylab('Chloride level') +
+             ggtitle('Chloride level after log transformation')
+
+
+grid.arrange(bp.ch, bp.ch.log, nrow=1)
+
 ```
 
 ```{r }
-bp.fsd <- ggplot(wine, aes(x=quality, y=free.sulfur.dioxide, fill=quality, group=quality)) +
-          geom_boxplot(outlier.shape=8, outlier.color='red', color='white') +
+bp.fsd <- ggplot(wine, aes(x=quality, y=free.sulfur.dioxide, color=quality)) +
+          geom_boxplot(outlier.shape=8, outlier.color='red') +
           stat_boxplot(geom='errorbar', width=0.3) +
           xlab('Quality level') +
           ylab('Chloride level') +
-          ggtitle('Free Sulfur Dioxide level found in different quality levels of wine')
+          ggtitle('Free Sulfur Dioxide level')
 
 bp.fsd
 ```
 
+
+
+## Statistical Analyses  
+
+### Are density and residual sugar independent  
+
 ```{r}
 
 ```
+
+
+
