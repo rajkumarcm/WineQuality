@@ -76,7 +76,14 @@ The dataset contains `r nrow(wine)` instances with `r length(colnames(wine))-1` 
 show(str(wine))
 ```
 
-### Data Description
+## Data Summary  
+
+```{r, results='markup'}
+library(psych)
+describe(wine)
+```
+
+## Data Description  
 
 Variable | Description
 ------- | -------
@@ -94,7 +101,7 @@ alcohol | Alcohol level in wine
 quality | represents rating for the quality of the wine
 
 
-### Prior research and background on domain
+## Prior research and background on domain
 
 After thorough research, information collected from various sources has been put together in a table.
 
@@ -238,10 +245,10 @@ This plot confirms the hypothesis we made in the last statement. As mentioned ea
 
 
 ```{r}
-
-ggplot(wine.collated, aes(x=wine.type, y=alcohol, color=wine.type)) +
-geom_boxplot(outlier.shape=8, outlier.color='red') +
-stat_boxplot(geom='errorbar') +
+colors <- c('red', 'azure4')
+ggplot(wine.collated, aes(x=wine.type, y=alcohol)) +
+geom_boxplot(outlier.shape=8, outlier.color='red', colour=colors) +
+stat_boxplot(geom='errorbar', color=colors) +
 xlab('Wine Type') +
 ylab('Alcohol level distribution') +
 ggtitle('Alcohol level in red and white wines')
@@ -434,6 +441,40 @@ bp.fsd
 ### Are density and residual sugar independent  
 
 ```{r}
+tmp_model <- lm(total.sulfur.dioxide ~ free.sulfur.dioxide, data=wine)
+tmp_x <- seq(min(wine$free.sulfur.dioxide), max(wine$free.sulfur.dioxide), length.out=50)
+tmp_y <- tmp_x * tmp_model$coefficients[['free.sulfur.dioxide']] + tmp_model$coefficients[['(Intercept)']]
+tmp_d <- cbind(tmp_x, tmp_y)
+colnames(tmp_d) <- c('free.sulfur.dioxide', 'total.sulfur.dioxide')
+tmp_d <- data.frame(tmp_d)
+
+cor.test(wine$free.sulfur.dioxide, wine$total.sulfur.dioxide)
+
+ggplot(wine, aes(x=free.sulfur.dioxide, y=total.sulfur.dioxide)) +
+geom_point(color='blue') +
+geom_line(data=tmp_d, color='red') +
+xlab('Free Sulfur Dioxide') +
+ylab('Total Sulfur Dioxide') +
+ggtitle('Correlation between Sulfur that is free and bound to other elements in wine')
+```
+
+```{r}
+
+tmp_model <- lm(density ~ residual.sugar, data=wine)
+tmp_x <- seq(min(wine$residual.sugar), max(wine$residual.sugar), length.out=50)
+tmp_y <- tmp_x * tmp_model$coefficients[['residual.sugar']] + tmp_model$coefficients[['(Intercept)']]
+tmp_d <- cbind(tmp_x, tmp_y)
+colnames(tmp_d) <- c('residual.sugar', 'density')
+tmp_d <- data.frame(tmp_d)
+
+cor.test(wine$residual.sugar, wine$density)
+
+ggplot(wine, aes(x=residual.sugar, y=density)) +
+geom_point(color='blue') +
+geom_line(data=tmp_d, color='red') +
+xlab('Residual Sugar') +
+ylab('Density') +
+ggtitle('Correlation between Residual sugar and Density')
 
 ```
 
