@@ -392,12 +392,21 @@ bp.fsd <- ggplot(wine, aes(x=quality, y=free.sulfur.dioxide, fill=quality, group
           geom_boxplot(outlier.shape=8, outlier.color='red', color='white') +
           stat_boxplot(geom='errorbar', width=0.3) +
           xlab('Quality level') +
-          ylab('Chloride level') +
+          ylab('Free Sulfur Dioxide level') +
           ggtitle('Free Sulfur Dioxide level found in different quality levels of wine')
 
 bp.fsd
 ```
 
-```{r}
 
+
+```{r }
+bp.tsd <- ggplot(wine, aes(x=quality, y=total.sulfur.dioxide, fill=quality, group=quality)) +
+          geom_boxplot(outlier.shape=8, outlier.color='red', color='white') +
+          stat_boxplot(geom='errorbar', width=0.3) +
+          xlab('Quality level') +
+          ylab('Total Sulfur Dioxide level') +
+          ggtitle('Total Sulfur Dioxide level found in different quality levels of wine')
+
+bp.tsd
 ```
