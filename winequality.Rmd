@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 ---
 title: "Wine Quality"
 date: "`r Sys.Date()`"
@@ -480,3 +481,446 @@ ggtitle('Correlation between Residual sugar and Density')
 
 
 
+=======
+---
+title: "Wine Quality"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+    number_sections: true
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+<style>
+body
+{
+  text-align: justify
+}
+
+.p
+{
+  margin-top:20px;
+}
+
+</style>
+
+```{r, include=F}
+knitr::opts_chunk$set(warning=F, results='hide', message=F)
+```
+
+```{r}
+library(ggplot2)
+library(ggExtra)
+library(gridExtra)
+library(ezids)
+library(lattice)
+library(corrplot)
+library(tidyverse)
+library(latex2exp)
+```
+# Chapter 1: Introduction  
+
+Wine is an alcoholic beverage that has been produced for over thousands of years and was originally founded in Georgia from 6000BC. The religious root the drink has, caused many to consume in the remembrance of God and this widened the trade across Europe. People consume wine also for its wonderful sweet taste and nutritious properties that are beneficial to health. While there are many types of wines, two of the most famous variants would be the Red and White versions produced mostly in the Europe. Wines that were once expensive to buy, are increasingly enjoyed by consumers around the world and the market is expected to grow annually by 7.22% (CAGR 2022-2025)[1]. Wine industries are researching different methods involved in the process of creating and selling wines at the same time retaining its quality to support its growth. Wines are sold at different price ranges depending on its quality, while the least expensive could be as low as $4, the pinnacle of wines could cost beyond $200 per bottle. Given a bottle of wine could be sold for over $200, we decided to conduct analyses to better understand what gives rise to the quality and their associated benefits by assessing publicly available dataset downloaded from UCI Machine Learning Repository.  
+```{r}
+
+wine <- read.csv(file='winequality-white.csv',
+                 header=T,
+                 sep=";",
+                 fill=T,
+                 strip.white=T,
+                 blank.lines.skip=T,
+                 colClasses = c('quality'='factor'))
+cnames <- colnames(wine)
+cnames_ind <- head(cnames, length(cnames)-1)
+wine_ind <- wine[, cnames_ind]
+
+redwine <- read.csv(file='winequality-red.csv',
+                 header=T,
+                 sep=";",
+                 fill=T,
+                 strip.white=T,
+                 blank.lines.skip=T,
+                 colClasses = c('quality'='factor'))
+```
+# Chapter 2: Description of the data  
+
+## Source Data  
+
+The dataset contains `r nrow(wine)` instances with `r length(colnames(wine))-1` explanatory and 1 dependent variable - *quality* all of which are numerical. Also, the dataset does not appear to contain any missing field which appeared to be a good fit for the analyses. The features in the dataset represent various chemical levels associated with different quality level. A glimpse of the dataset is as follows:  
+
+```{r, results='markup'}
+show(str(wine))
+```
+
+### Data Description
+
+Variable | Description
+------- | -------
+fixed.acidity | nonvolatile acidity represents the acetic acid in wine
+volatile.acidity | level of acidic elements of a wine that are gaseous
+citric.acid | level of fresh flavor added to a finished wine
+residual.sugar | amount of sugar left unfermented in a finished wine. This affects the sweetness of the wine
+chlorides | 
+free.sulfur.dioxide | 
+total.sulfur.dioxide | 
+density |
+pH | represents how acidic or basic the water is
+sulphates | Substance produced 
+alcohol | Alcohol level in wine
+quality | represents rating for the quality of the wine
+
+
+### Prior research and background on domain
+
+After thorough research, information collected from various sources has been put together in a table.
+
+
+Alcohol level | Typical ABV | Made in, for instance | Avg climate | Impact in harvesting | Acidity level | Sweetness
+------- | ------- | ------- | ------- | ------- | ------- | -------
+Low | 10-11.5% | Germany and Italy | Usually colder | Under ripeness | High | Semi-Sweet
+Medium | 11.5-13.5% | Italy and CA | Warm | Under ripeness | High | Semi-Sweet
+High | 20% | Portugal | Hot | Ripe | Low | Sweet
+
+As it can be inferred from the above table, grapes that are harvested before the ripe stage typically contain high acidic level that is reflected on the fresh flavor found in white wines. These wines are also low in alcohol level. The alcohol present in these wines are typically produced by the fermentation process during which the yeast added to the grape juice (white wine) converts the sugar in the grape into ethanol and carbon dioxide. So higher the level of sweetness in the wine, the higher the level of alcohol is. Now, it is not surprising why high alcohol wine, also known as hot wine, is considered better in quality and more expensive as it is high in sweetness and takes longer time for the grapes to ripe than those that are made with under-ripe grapes.
+
+"Despite concerns over the pace of change, many independent producers are experimenting more now and concentrating predominantly on the quality of the wine rather than on quantity.  This is leading to drier, richer and less spritzy styles with greater ripeness of fruit evident on the palate and improved export sales, particular to the US, with a growing base of new consumers. Whether or not we want to admit it, statistically, America does have a sweet tooth" [alcohol professor](https://www.alcoholprofessor.com/blog-posts/blog/2014/04/23/vinho-verde-a-splash-of-summer-vinous-joy)
+
+The association of alcohol level with wine quality is more profound with red wine. The yeast is not applied only to the grape juice instead to the entire grapes including skin, which gives red wine the color, aroma, and the sweet flavor it has. Acids are crucial in boosting the effects of sulfur dioxide $SO_2$, which ensures the wine has longer shelf life protecting it from becoming rotten. A good acidity level also fends off most unwanted bacteria, as these compounds are unable to survive in low pH solutions. [vivino](https://www.vivino.com/wine-news/why-is-acid-so-important-in-wine#:~:text=Acids%20are%20crucial%20in%20boosting,survive%20in%20low%20pH%20solutions)
+It is also believed, without drifting far from the scope of this analysis, that acidity and Ph level do have some correlation between them.  
+
+
+# Chapter 3: Smart Questions  
+
+1. How does the alcohol content affect the quality?
+2. How does the ph level within the wine affect its quality?
+3. Are there different acidity levels that are heavily correlated and how do they affect quality?
+4. Can we describe an example for a high quality Vinho verde?
+5. Are there any independent variables that are highly correlated with each other ?
+6. Do the mean chemical levels for different wine quality remain the same ?
+7. Are wines with less ABV are more acidic compared to those with high ABV ?
+
+
+# Chapter 4: Exploratory Data Analysis
+
+```{r, include=F}
+wine.colnames <- colnames(wine)
+wine.colnames <- c(wine.colnames, 'wine.type')
+
+wine1 <- cbind(wine, rep('white', nrow(wine)))
+colnames(wine1) <- wine.colnames
+
+wine2 <- cbind(redwine, rep('red', nrow(redwine)))
+colnames(wine2) <- wine.colnames
+
+wine.collated <- rbind(wine1, wine2)
+```
+
+## Wine Quality distribution
+```{r}
+# May be we should start using bar instead of histogram as this looks so ugly
+ggplot(wine.collated, aes(quality, fill=wine.type)) +
+  geom_bar(color='white', alpha=0.7) +
+  xlab('Quality') +
+  ylab('Frequency rate') +
+  labs('Quality distribution')
+```
+
+## Correlation between variables
+Visualizing highly correlated features
+
+```{r}
+
+pairs(wine)
+```
+
+
+```{r, include=F, fig.width=11}
+
+tmp_wine <- wine[wine[, 'quality']==9,]
+quality_index <- which(colnames(tmp_wine)=='quality')
+tmp_wine <- tmp_wine[, -quality_index]
+
+cor <- corrplot(cor(tmp_wine),
+                type='upper',
+                method='number')
+```
+
+## Answering SMART Questions  
+
+### Analysing how various alcohol level affect the overall quality 
+```{r quality}
+# , fig.width=11, fig.height=4
+bp.al <- ggplot(wine, aes(x=quality, y=alcohol, color=quality, group=quality)) +
+         geom_boxplot(outlier.shape=8, outlier.color='red') +
+         stat_boxplot(geom='errorbar', width=0.3) +
+         xlab('Quality level') +
+         ylab("Alcohol level %") +
+         ggtitle('Alcohol level found in different quality levels of white wine')
+
+bp.al
+
+```
+  
+
+From the above box and whisker plot, better quality is indeed associated with increased level of alcohol level as was our finding from the prior research. Now, it is time to understand the connection between alcohol level and residual sugar as it was understood from the prior research that high alcohol content is produced by the fermentation process by converting grape sugar into ethanol.
+
+```{r, fig.width=11, fig.height=4}
+sp.al_rs <- ggplot(wine, aes(x=alcohol, y=residual.sugar, color=quality)) +
+            geom_point(alpha=0.5) +
+            xlab('Alcohol level') +
+            ylab('Residual Sugar') +
+            ggtitle('Correlation between alcohol and residual sugar levels') +
+            theme(legend.position='left')
+sp.al_rs <- ggMarginal(sp.al_rs, type='boxplot', fill='darkgray')
+
+bp.rs <- ggplot(wine, aes(x=quality, y=residual.sugar, color=quality, group=quality)) +
+         geom_boxplot(outlier.shape=8, outlier.color='red') +
+         stat_boxplot(geom='errorbar', width=0.3) +
+         xlab('Quality level') +
+         ylab('Residual sugar level') +
+         ggtitle('Residual sugar level found in different quality levels of wine')
+
+grid.arrange(sp.al_rs, bp.rs, nrow=1)
+
+```
+It is surprising that our expectation was not backed by the results conveyed by the plots above, but we think there are two things that must be held accountable for this finding:  
+
+1. Residual sugar is not the same as sugar level in the grapes.
+
+**Terminology Alert**  
+Residual sugar represents the amount of sugar that is left after the fermentation process.  
+
+
+We are not sure at this point whether this can directly represent the level of sweetness in the wine as it could be inversely proportional. What we mean by that is the residual sugar level does not necessary allow us to infer what the original sugar level was in the grape juice prior to the fermentation process. Hence, we believe it would be safe to presume that the lesser the residual sugar level is the higher the sugar got decomposed into alcohol and this is evident from the above plot. Also the correlation between alcohol level and the residual sugar is `r cor(wine$alcohol, wine$residual.sugar)`
+
+2. The type of wine is what must be held accountable for this finding.  
+
+```{r alcohol_residual_sugar}
+
+sp.al_rs <- ggplot(wine.collated, aes(x=alcohol, y=residual.sugar, color=wine.type)) +
+            geom_point() +
+            xlab('Alcohol level') +
+            ylab('Residual Sugar level') +
+            ggtitle('Correlation between alcohol and residual sugar level in white & red wines')
+            
+sp.al_rs
+
+ggplot(wine.collated, aes(x=alcohol, y=..density.., fill=wine.type, color='white')) +
+geom_histogram()
+
+```
+
+This plot confirms the hypothesis we made in the last statement. As mentioned earlier, we should not only note the sweeter the wine the higher the alcohol level, but lighter wines i.e., those with ABV $<= 11.5\%$ tend to exhibit more fresh notes with high level of acidity rather than being more sweet. This is the case in particular with white wine and is evident from the scatter plot above that red wines contain less residual sugar compared to that found in white wine.  
+
+
+```{r}
+
+ggplot(wine.collated, aes(x=wine.type, y=alcohol, color=wine.type)) +
+geom_boxplot(outlier.shape=8, outlier.color='red') +
+stat_boxplot(geom='errorbar') +
+xlab('Wine Type') +
+ylab('Alcohol level distribution') +
+ggtitle('Alcohol level in red and white wines')
+
+```
+
+
+It is understood that red wine typically has more alcohol than the white wine [Masterclass](https://www.masterclass.com/articles/learn-about-alcohol-content-in-wine-highest-to-lowest-abv-wines#does-white-wine-or-red-wine-have-higher-alcohol-content) but the above boxplot shows the opposite. 
+
+***DO YOU WANT TO ADD THIS LINE***
+Perhaps the dataset for red wine is only a fraction of what we have for white wine that is causing confusion.  
+
+### How does the pH level affect the wine quality?  
+
+**Terminology Alert**  
+pH level refers to how basic or acidic the liquid is. While a lower pH level means the liquid is more acidic, higher level represents how basic or alkaline the water is.  
+
+```{r}
+ggplot(wine.collated, aes(x=wine.type, y=pH, color=wine.type)) +
+geom_boxplot(outlier.shape=8, outlier.color='red') +
+stat_boxplot(geom='errorbar', width=0.5) +
+ggtitle('Distribution of pH level in wine')
+
+```
+The above boxplot between white and red wine confirms our hypothesis that white wine is more acidic compared to that of red wine, but what constitutes to the quality is the question. In order to answer, it would be first relevant to see how the pH level varies across different quality levels.  
+
+```{r, }
+#fig.width=11, fig.height=4
+bp.ph.white <- ggplot(wine, aes(x=quality, y=pH, color=quality)) +
+               geom_boxplot(outlier.shape=8, outlier.color='red') +
+               stat_boxplot(geom='errorbar') +
+               xlab('Quality') +
+               ylab('pH') +
+               ggtitle('Distribution of pH level in white wine')
+bp.ph.white
+
+# bp.ph.red <-   ggplot(redwine, aes(x=quality, y=pH, color=quality)) +
+#                geom_boxplot(outlier.shape=8, outlier.color='red') +
+#                stat_boxplot(geom='errorbar') +
+#                xlab('Quality') +
+#                ylab('pH') +
+#                ggtitle('Distribution of pH level in red wine')
+# 
+# grid.arrange(bp.ph.white, bp.ph.red, nrow=1)
+
+```
+At this point, we believe pH is just one of the factors and is not directly related to quality as both low and high quality wines have similar pH level. We believe there must be other factors that affect the overall quality.  
+
+```{r, include=T}
+# wine.1 represents white wine dataset
+by_quality <- wine1 %>% group_by(quality)
+wine1.summary <- by_quality %>% summarise(pH = mean(pH))
+wine1.summary <- cbind(wine1.summary, rep('white', nrow(wine1.summary)))
+colnames(wine1.summary) <- c('quality', 'pH', 'wine.type')
+
+# wine.2 represents red wine dataset
+by_quality <- wine2 %>% group_by(quality)
+wine2.summary <- by_quality %>% summarise(pH = mean(pH))
+wine2.summary <- cbind(wine2.summary, rep('red', nrow(wine2.summary)))
+colnames(wine2.summary) <- c('quality', 'pH', 'wine.type')
+
+# combine white and red wine dataset together
+wine.summary <- rbind(wine1.summary, wine2.summary)
+
+```
+
+```{r, include=T, fig.height=4, fig.width=11}
+grouped_bar <- ggplot(wine.summary, aes(x=quality, y=pH, fill=wine.type)) +
+               geom_bar(position="dodge", stat="identity") +
+               ggtitle('Average pH level')
+
+line_plot <- ggplot(wine.summary, aes(x=quality, y=pH, group=wine.type, color=wine.type)) +
+             geom_point() +
+             geom_line()
+
+grid.arrange(grouped_bar, line_plot, nrow=1)
+```
+
+
+### Are there different acidity levels that are heavily correlated and how do they affect quality?  
+
+```{r correlation, results='asis'}
+
+acidity_cnames <- c('fixed.acidity', 'volatile.acidity', 'citric.acid')
+cplot <- corrplot(cor(wine[, acidity_cnames]),
+                  type='upper',
+                  method='circle')
+
+```
+
+As can be seen from the above correlation plot, the acidity levels are not correlated with each other.  
+
+```{r fixed.acidity, fig.width=11, fig.height=4}
+
+bp.fa <- ggplot(wine, aes(x=quality, y=fixed.acidity, color=quality, group=quality)) +
+         geom_boxplot(outlier.shape=8, outlier.color='red') +
+         stat_boxplot(geom='errorbar', width=0.3) +
+         xlab('Quality level') +
+         ylab(TeX('Fixed Acidity level $x 10^{3} mg/L $')) +
+         ggtitle("Distribution of fixed acidity in white wine")
+
+bp.fa.red <- ggplot(redwine, aes(x=quality, y=fixed.acidity, color=quality, group=quality)) +
+             geom_boxplot(outlier.shape=8, outlier.color='red') +
+             stat_boxplot(geom='errorbar', width=0.3) +
+             xlab('Quality level') +
+             ylab(TeX('Fixed Acidity level $x 10^{3} mg/L $')) +
+             ggtitle("Distribution of fixed acidity in red wine")
+
+bp.fa_wr <- ggplot(wine.collated, aes(x=wine.type, y=fixed.acidity, color=wine.type)) +
+            geom_boxplot(outlier.shape=8, outlier.color='red') +
+            stat_boxplot(geom='errorbar', width=0.3) +
+            ggtitle('Distribution of fixed acidity in white and red')
+
+grid.arrange(bp.fa.red, bp.fa, nrow=1)
+```
+
+### Are there any independent variables that are highly correlated with each other ?  
+
+```{r, results='asis'}
+ind_cnames <- colnames(wine)
+ind_cnames <- ind_cnames[1:length(ind_cnames)-1]
+corrplot(cor(wine[, ind_cnames]),
+         type='upper',
+         method='circle')
+```
+
+--------- REMOVE DENSITY VARIABLE AS IT IS HIGHLY CORRELATED WITH RESIDUAL SUGAR
+
+```{r volatile.acidity}
+bp.va <- ggplot(wine, aes(x=quality, y=volatile.acidity, color=quality)) +
+          geom_boxplot(outlier.shape=8, outlier.color='red') +
+          stat_boxplot(geom='errorbar', width=0.3) +
+           xlab('Quality level') +
+           ylab('Volatile Acidity level') +
+           ggtitle('Volatile Acidity level')
+
+bp.va
+```
+
+```{r citric.acidity}
+bp.ca <- ggplot(wine, aes(x=quality, y=citric.acid, color=quality)) +
+          geom_boxplot(outlier.shape=8, outlier.color='red') +
+          stat_boxplot(geom='errorbar', width=0.3) +
+         xlab('Quality level') +
+         ylab('Citric Acid level') +
+         ggtitle('Citric Acid level')
+
+bp.ca
+```
+
+
+
+```{r chloride, fig.width=11, fig.height=4}
+
+bp.ch <- ggplot(wine, aes(x=quality, y=chlorides, color=quality)) +
+                geom_boxplot(outlier.shape=8, outlier.color='red') +
+                stat_boxplot(geom='errorbar', width=0.3) +
+                xlab('Quality level') +
+                ylab('Chloride level') +
+                ggtitle('Chloride level')
+
+
+bp.ch.log <- ggplot(wine, aes(x=quality, y=log(chlorides), color=quality)) +
+             geom_boxplot(outlier.shape=8, outlier.color='red') +
+             stat_boxplot(geom='errorbar', width=0.3) +
+             xlab('Quality level') +
+             ylab('Chloride level') +
+             ggtitle('Chloride level after log transformation')
+
+
+grid.arrange(bp.ch, bp.ch.log, nrow=1)
+
+```
+
+```{r }
+bp.fsd <- ggplot(wine, aes(x=quality, y=log(free.sulfur.dioxide), color=quality)) +
+          geom_boxplot(outlier.shape=8, outlier.color='red') +
+          stat_boxplot(geom='errorbar', width=0.3) +
+          xlab('Quality level') +
+          ylab('Free Sulfur Dioxide level') +
+          ggtitle('Free Sulfur Dioxide level')
+
+bp.fsd
+```
+
+
+
+## Statistical Analyses  
+
+### Are density and residual sugar independent  
+
+```{r}
+
+```
+
+
+
+>>>>>>> Stashed changes
