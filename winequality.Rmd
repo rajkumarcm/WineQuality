@@ -294,7 +294,7 @@ grid.arrange(cluster1, cluster2, nrow=1)
 
 ```
 
-Since cluster1 has more data points associated with lower quality levels we decide level 6 acts as a threshold. For any data points with quality level $<=6$ will be categorized as low quality and for those that have quality $>6$ will be grouped as high quality wines.  
+We did attempted KMeans, but the results were unsatisfactory so instead of grouping by KMeans clustering, we had decided to group levels by random binning technique. For any data points with quality level $<=5$ will be categorized as low quality and for those that have quality $>5$ will be grouped as high quality wines.  
 
 ```{r partition}
 # Variable name wine refers to white wine, while redwine explicitly means red wine
@@ -302,8 +302,8 @@ Since cluster1 has more data points associated with lower quality levels we deci
 # grouped term refers to quality 3-6 combined as low and 7-9 combined as high
 
 # We use wine.orig to capture since quality in wine.orig is numeric instead of factors
-bad <- wine[wine.orig[,'quality'] <= 6,]
-good <- wine[wine.orig[,'quality'] > 6,]
+bad <- wine[wine.orig[,'quality'] <= 5,]
+good <- wine[wine.orig[,'quality'] > 5,]
 
 bad$quality <- 'low'
 good$quality <- 'high'
@@ -444,6 +444,7 @@ stat_boxplot(geom='errorbar', width=0.5) +
 ggtitle('Distribution of pH level in wine')
 
 ```
+
 The above boxplot between white and red wine confirms our hypothesis that white wine is more acidic compared to that of red wine, but what constitutes to the quality is the question. In order to answer, it would be first relevant to see how the pH level varies across different quality levels.  
 
 ```{r, }
@@ -458,6 +459,7 @@ bp.ph.white
 
 
 ```
+
 It is commonly believed that many of the Americans prefer sweeter wines (vinepair)[https://vinepair.com/articles/sweet-wine-dry-culture/] and it makes sense why higher pH level on average is linked to high quality while low average pH is linked to low quality wines. We believe the process of winemaking has reflected on user preference.  
 
 ```{r, include=F}
