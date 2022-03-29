@@ -44,7 +44,9 @@ library(latex2exp)
 ```
 # Chapter 1: Introduction  
 
-Wine is an alcoholic beverage that has been produced for over thousands of years and was originally founded in Georgia from 6000BC. The religious root the drink has, caused many to consume in the remembrance of God and this widened the trade across Europe. People consume wine also for its wonderful sweet taste and nutritious properties that are beneficial to health. While there are many types of wines, two of the most famous variants would be the Red and White versions produced mostly in the Europe. Wines that were once expensive to buy, are increasingly enjoyed by consumers around the world and the market is expected to grow annually by 7.22% (CAGR 2022-2025)[1]. Wine industries are researching different methods involved in the process of creating and selling wines at the same time retaining its quality to support its growth. Wines are sold at different price ranges depending on its quality, while the least expensive could be as low as $4, the pinnacle of wines could cost beyond $200 per bottle. Given a bottle of wine could be sold for over $200, we decided to conduct analyses to better understand what gives rise to the quality and their associated benefits by assessing publicly available dataset downloaded from UCI Machine Learning Repository.  
+Wine is an alcoholic beverage that has been produced for over thousands of years and was originally founded in Georgia from 6000BC. People consume wine for its wonderful sweet taste and nutritious properties that are beneficial to health. While there are many types of wines, two of the most famous variants would be the Red and White versions produced mostly in the Europe. Wines that were once expensive to buy, are increasingly enjoyed by consumers around the world and the market is expected to grow annually by 7.22% (CAGR 2022-2025)(Statista)[https://www.statista.com/outlook/cmo/alcoholic-drinks/wine/worldwide]. For this analysis, we are dealing with wine made in Vinho Verde, a region in Portuguese and is one of the top ten wine exporting countries with approximately 3% of the market share in 2005 and whose export has seen substantial growth between 1997 and 2007 (Cortez et. al)[http://repositorium.sdum.uminho.pt/bitstream/1822/10029/1/wine5.pdf]. The sales of this wine has reached a whopping €64 million just outside the Portugal market and one of the biggest importers of this wine would be The U.S (The Portugal News)[https://www.theportugalnews.com/news/2022-01-25/record-year-for-vinho-verde/64832]   
+
+Wine industries are researching different methods involved in the process of creating and selling wines at the same time retaining its quality to support its growth. Wines are sold at different price ranges depending on its quality, while the least expensive could be as low as $4, the pinnacle of wines could cost beyond $200 per bottle (winefolly)[https://winefolly.com/lifestyle/reality-of-wine-prices-what-you-get-for-what-you-spend/]. Given a bottle of wine could be sold for over $200, we decided to conduct analyses to better understand what gives rise to the quality by assessing publicly available dataset downloaded from UCI Machine Learning Repository. Perhaps this work will lay the foundation for future research analysis in  understanding what defines a better quality wine.  
 
 ```{r, include=F}
 
@@ -180,7 +182,7 @@ High | 20% | Portugal | Hot | Ripe | Low | Sweet
 
 As it can be inferred from the above table, grapes that are harvested before the ripe stage typically contain high acidic level that is reflected on the fresh flavor found in white wines. These wines are also low in alcohol level. The alcohol present in these wines are typically produced by the fermentation process during which the yeast added to the grape juice (white wine) converts the sugar in the grape into ethanol and carbon dioxide. So higher the level of sweetness in the wine, the higher the level of alcohol is. Now, it is not surprising why high alcohol wine, also known as hot wine, is considered better in quality and more expensive as it is high in sweetness and takes longer time for the grapes to ripe than those that are made with under-ripe grapes.
 
-"Despite concerns over the pace of change, many independent producers are experimenting more now and concentrating predominantly on the quality of the wine rather than on quantity.  This is leading to drier, richer and less spritzy styles with greater ripeness of fruit evident on the palate and improved export sales, particular to the US, with a growing base of new consumers. Whether or not we want to admit it, statistically, America does have a sweet tooth" [alcohol professor](https://www.alcoholprofessor.com/blog-posts/blog/2014/04/23/vinho-verde-a-splash-of-summer-vinous-joy)
+"Despite concerns over the pace of change, many independent producers are experimenting more now and concentrating predominantly on the quality of the wine rather than on quantity.  This is leading to drier, richer and less spritzy styles with greater ripeness of fruit evident on the palate and improved export sales, particular to the US, with a growing base of new consumers. Whether or not we want to admit it, statistically, America does have a sweet tooth" [vinepair](https://vinepair.com/articles/sweet-wine-dry-culture/)
 
 The association of alcohol level with wine quality is more profound with red wine. The yeast is not applied only to the grape juice instead to the entire grapes including skin, which gives red wine the color, aroma, and the sweet flavor it has. Acids are crucial in boosting the effects of sulfur dioxide $SO_2$, which ensures the wine has longer shelf life protecting it from becoming rotten. A good acidity level also fends off most unwanted bacteria, as these compounds are unable to survive in low pH solutions. [vivino](https://www.vivino.com/wine-news/why-is-acid-so-important-in-wine#:~:text=Acids%20are%20crucial%20in%20boosting,survive%20in%20low%20pH%20solutions)
 
@@ -376,13 +378,13 @@ From the macroscopic level, the correlation may not be very visible. Perhaps a c
 
 **Correlation between alcohol and residual sugar in high quality wines**  
 
-```{r}
+```{r, results='markup'}
 cor.test(good$alcohol, good$residual.sugar)
 ```
 
 **Correlation between alcohol and residual sugar in low quality wines**  
 
-```{r}
+```{r, results='markup'}
 cor.test(bad$alcohol, bad$residual.sugar)
 ```
 
@@ -630,6 +632,14 @@ ylim(0.984, 1.005)
 ggtitle('How density and alcohol are correlated')
 ```
 
+From the EDA conducted above, we can conclude a good quality Vinho Verde should describe the following properties:  
+
+1. Red wines with more vinegar like taste and white wines with less fixed acidity  
+2. Wines that contain high ABV  
+3. A little less salty  
+4. More sweet in nature, who does not like sweet drinks ?  
+
+I don't think it would be a good idea to list all exhaustive criterias as we will quickly run into something called overfitting. I believe the above stated constraints act as a general criteria to illustrate a good quality Vinho Verde wine.  
 
 # Statistical Analyses  
 
@@ -737,7 +747,7 @@ horiz = F)
 abline(h=0.19, col=c('darkred'))
 ```
 
-## Correlation between wine.type and other variables excluding quality
+### Correlation between wine.type and other variables excluding quality
 
 I thought it would also be interesting to show what variables play a critical role in deciding the type of wine.  
 
@@ -769,28 +779,31 @@ I believe the abline may not be entirely correct, but I will learn in the coming
 
 ## Is density statistically significant between two quality levels  
 
-```{r, include='markup'}
+```{r, results='markup'}
 aov.density_quality <- aov(density~quality, data=wine.grouped)
 summary(aov.density_quality)
 
 TukeyHSD(aov.density_quality)
 ```
+
+As the p-value suggest, density between two subgroups low and high quality wines are statistically significant. In other words, density does differ as per quality.  
+
 # Modeling  
 
-```{r test_model, results='asis'}
+```{r test_model, results='markup'}
 test.model <- glm(quality ~ ., data=wine.grouped[-length(colnames(wine.grouped))], family='binomial')
 summary(test.model)
 ```
 Starting off with highly correlated variable  
 
-```{r glm1, results='asis'}
+```{r glm1, results='markup'}
 model1 <- glm(quality ~ alcohol, data=wine.grouped, family='binomial')
 summary(model1)
 ```
 
 I do not want to use density as it is highly correlated with alcohol. The next highly correlated predictor variable with response variable is chlorides.  
 
-```{r glm2, results='asis'}
+```{r glm2, results='markup'}
 model2 <- glm(quality ~ alcohol+chlorides, data=wine.grouped, family='binomial')
 summary(model2)
 ```
@@ -798,18 +811,20 @@ summary(model2)
 xkablevif(model2)
 ```
 
-```{r glm3, results='asis'}
+```{r glm3, results='markup'}
 model3 <- glm(quality ~ alcohol+chlorides+free.sulfur.dioxide, data=wine.grouped, family='binomial')
 summary(model3)
 ```
+
 I did not include Total Sulfur Dioxide as it did not statistical significance.  
 
-```{r, results='asis'}
+```{r, results='markup'}
 xkablevif(model3)
 ```
+
 I wish to ignore the VIF score that is slightly higher than 10.  
 
-```{r, results='asis'}
+```{r, results='markup'}
 model4 <- glm(quality ~ alcohol+chlorides+free.sulfur.dioxide+residual.sugar, data=wine.grouped, family='binomial')
 summary(model4)
 ```
@@ -820,7 +835,7 @@ xkablevif(model4)
 
 You can clearly see residual sugar is over the limit. This is because, residual sugar is correlated with alcohol. Remember the results I conveyed in the EDA part ?  
 
-```{r, results='asis'}
+```{r, results='markup'}
 model5 <- glm(quality ~ alcohol+chlorides+free.sulfur.dioxide+residual.sugar+sulphates, data=wine.grouped, family='binomial')
 summary(model5)
 ```
@@ -830,7 +845,7 @@ xkablevif(model5)
 
 As I can clearly see adding Sulphates clearly increase the VIF score. Hence I will discard that model  
 
-```{r, results='asis'}
+```{r, results='markup'}
 model6 <- glm(quality ~ alcohol+chlorides+free.sulfur.dioxide+residual.sugar+sulphates+pH, data=wine.grouped, family='binomial')
 summary(model6)
 ```
@@ -840,10 +855,11 @@ xkablevif(model6)
 ```
 This as well increases the VIF score for the rest as they all suggest multicollinearity between them. I will discard this model as well.  
 
-```{r, results='asis'}
+```{r, results='markup'}
 an.md <- anova(model1, model2, model3, model4, model5, model6)
 an.md
 summary(an.md)
 
 ```
 
+Now I am somewhat surprised that ANOVA summary for the model does not show statistical significance level or p adjusted values. Perhaps this is due to the use of GLM instead of LM. Due to the limited scope of this project, we will end the analysis at this point and will look forward learning more on interpreting ANOVA results with GLM models.  
