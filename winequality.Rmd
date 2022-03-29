@@ -420,15 +420,31 @@ ggtitle('ALcohol distribution')
 This plot confirms the hypothesis we made in the last statement. As mentioned earlier, we should not only note the sweeter the wine the higher the alcohol level, but lighter wines i.e., those with ABV $<= 11.5\%$ tend to exhibit more fresh notes with high level of acidity rather than being more sweet. This is the case in particular with white wine and is evident from the scatter plot above that red wines contain less residual sugar compared to that found in white wine.  
 
 
-```{r}
-colors <- c('red', 'azure4')
-ggplot(wine.collated, aes(x=wine.type, y=alcohol)) +
-geom_boxplot(outlier.shape=8, outlier.color='red', colour=colors) +
-stat_boxplot(geom='errorbar', color=colors) +
-xlab('Wine Type') +
-ylab('Alcohol level distribution') +
-ggtitle('Alcohol level in red and white wines')
+```{r, fig.width=11, fig.height=4}
 
+bp.alc.red1 <- ggplot(redwine.grouped, aes(x=quality, y=alcohol, color=quality)) +
+                geom_boxplot(outlier.shape=8, outlier.color='red') +
+                stat_boxplot(geom='errorbar') +
+                xlab('Wine Type') +
+                ylab('Alcohol level in %') +
+                ggtitle('Alcohol level in Red Wine')
+
+bp.alc.white1 <- ggplot(wine.grouped, aes(x=quality, y=alcohol, color=quality)) +
+                    geom_boxplot(outlier.shape=8, outlier.color='red') +
+                    stat_boxplot(geom='errorbar') +
+                    xlab('Wine Type') +
+                    ylab('Alcohol level in %') +
+                    ggtitle('Alcohol level in White Wine')
+
+tmp.wine.collated.grouped.good <- wine.collated.grouped[wine.collated.grouped[, 'quality']=='high',]
+bp.alc.red.white1 <- ggplot(tmp.wine.collated.grouped.good, aes(x=wine.type, y=alcohol, color=wine.type)) +
+                    geom_boxplot(outlier.shape=8, outlier.color='red') +
+                    stat_boxplot(geom='errorbar') +
+                    xlab('Wine Type') +
+                    ylab('Alcohol level distribution') +
+                    ggtitle('Alcohol level in red and white wines')
+
+grid.arrange(bp.alc.red1, bp.alc.white1, bp.alc.red.white1, nrow=1)
 ```
 
 It is understood that red wine typically has more alcohol than the white wine [Masterclass](https://www.masterclass.com/articles/learn-about-alcohol-content-in-wine-highest-to-lowest-abv-wines#does-white-wine-or-red-wine-have-higher-alcohol-content) but the above boxplot shows the opposite. We believe this difference is due to the fact Vinho Verde wines are made with grapes harvested before they are fully ripe which means they have slightly more punchy notes than typical red wines do. And obviously, other acidity can also be accounted for this.  
@@ -448,15 +464,32 @@ ggtitle('Distribution of pH level in wine')
 
 The above boxplot between white and red wine confirms our hypothesis that white wine is more acidic compared to that of red wine, but what constitutes to the quality is the question. In order to answer, it would be first relevant to see how the pH level varies across different quality levels.  
 
-```{r, }
+```{r, fig.width=11, fig.height=4}
 
-bp.ph.white <- ggplot(wine, aes(x=quality, y=pH, color=quality)) +
+bp.ph.white <- ggplot(wine.grouped, aes(x=quality, y=pH, color=quality)) +
                geom_boxplot(outlier.shape=8, outlier.color='red') +
                stat_boxplot(geom='errorbar') +
                xlab('Quality') +
                ylab('pH') +
                ggtitle('Distribution of pH level in white wine')
-bp.ph.white
+
+bp.ph.red <- ggplot(redwine.grouped, aes(x=quality, y=pH, color=quality)) +
+               geom_boxplot(outlier.shape=8, outlier.color='red') +
+               stat_boxplot(geom='errorbar') +
+               xlab('Quality') +
+               ylab('pH') +
+               ggtitle('Distribution of pH level in red wine')
+
+tmp.wine.collated.grouped.good <- wine.collated.grouped[wine.collated.grouped[, 'quality']=='high',]
+
+bp.ph.red.white <- ggplot(tmp.wine.collated.grouped.good, aes(x=wine.type, y=pH, color=wine.type)) +
+                   geom_boxplot(outlier.shape=8, outlier.color='red') +
+                   stat_boxplot(geom='errorbar') +
+                   xlab('Quality') +
+                   ylab('pH') +
+                   ggtitle('Distribution of pH level in white & red')
+
+grid.arrange(bp.ph.white, bp.ph.red, bp.ph.red.white, nrow=1)
 
 
 ```
@@ -535,7 +568,7 @@ bp.fa.red <- ggplot(redwine, aes(x=quality, y=fixed.acidity, color=quality, grou
              ylab(TeX('Fixed Acidity level $x 10^{3} mg/L $')) +
              ggtitle("Distribution of fixed acidity in red wine")
 
-bp.fa_wr <- ggplot(wine.collated, aes(x=wine.type, y=fixed.acidity, color=wine.type)) +
+bp.fa_wr <- ggplot(wine.collated.grouped[wine.collated.grouped[, 'quality']=='high',], aes(x=wine.type, y=fixed.acidity, color=wine.type)) +
             geom_boxplot(outlier.shape=8, outlier.color='red') +
             stat_boxplot(geom='errorbar', width=0.3) +
             ggtitle('Distribution of fixed acidity in white and red')
@@ -557,50 +590,94 @@ The anova test result does show that fixed acidity is statistically significant 
 
 ```{r, results='asis'}
 ind_cnames <- colnames(wine)
-ind_cnames <- ind_cnames[1:length(ind_cnames)-1]
+ind_cnames <- ind_cnames[1:(length(ind_cnames)-2)]
 corrplot(cor(wine.orig[, ind_cnames]),
          type='upper',
          method='circle')
 ```
 
-```{r volatile.acidity}
+```{r volatile.acidity, fig.width=11, fig.height=4}
 
 bp.va <- ggplot(wine, aes(x=quality, y=volatile.acidity, color=quality)) +
           geom_boxplot(outlier.shape=8, outlier.color='red') +
           stat_boxplot(geom='errorbar', width=0.3) +
            xlab('Quality level') +
            ylab('Volatile Acidity level') +
-           ggtitle('Volatile Acidity level')
+           #ylim(0.05, 1) +
+           ggtitle('Volatile Acidity level in White Wine')
 
-bp.va
+bp.va.red <- ggplot(redwine, aes(x=quality, y=volatile.acidity, color=quality)) +
+              geom_boxplot(outlier.shape=8, outlier.color='red') +
+              stat_boxplot(geom='errorbar', width=0.3) +
+               xlab('Quality level') +
+               ylab('Volatile Acidity level') +
+               # ylim(0.05, 1) +
+               ggtitle('Volatile Acidity in Red Wine')
+
+bp.va.red.white <- ggplot(wine.collated.grouped[wine.collated.grouped[, 'quality']=='high',], aes(x=wine.type, y=volatile.acidity, color=wine.type)) +
+                  geom_boxplot(outlier.shape=8, outlier.color='red') +
+                  stat_boxplot(geom='errorbar', width=0.3) +
+                   xlab('Quality level') +
+                   ylab('Volatile Acidity level') +
+                   # ylim(0.05, 1) +
+                   ggtitle('Volatile Acidity in Red & White')
+
+grid.arrange(bp.va, bp.va.red, bp.va.red.white, nrow=1)
 ```
 
 As mentioned earlier, too high or too low of volatile acidity can give bad smell and leave the consumer with an unpleasant experience. Perhaps this confirms our initial idea.   
 
-```{r citric.acidity}
+```{r citric.acidity, fig.height=4, fig.width=11}
 bp.ca <- ggplot(wine.grouped, aes(x=quality, y=citric.acid, color=quality)) +
           geom_boxplot(outlier.shape=8, outlier.color='red') +
           stat_boxplot(geom='errorbar', width=0.3) +
          xlab('Quality level') +
          ylab('Citric Acid level') +
-         ggtitle('Citric Acid level')
+         ggtitle('Citric Acid in White Wine')
 
-bp.ca
+bp.ca.red <- ggplot(redwine.grouped, aes(x=quality, y=citric.acid, color=quality)) +
+             geom_boxplot(outlier.shape=8, outlier.color='red') +
+             stat_boxplot(geom='errorbar', width=0.3) +
+             xlab('Quality level') +
+             ylab('Citric Acid level') +
+             ggtitle('Citric Acid in Red Wine')
+
+bp.ca.red.white <- ggplot(wine.collated.grouped[wine.collated.grouped[, 'quality']=='high',], aes(x=wine.type, y=citric.acid, color=wine.type)) +
+                  geom_boxplot(outlier.shape=8, outlier.color='red') +
+                  stat_boxplot(geom='errorbar', width=0.3) +
+                  xlab('Quality level') +
+                  ylab('Citric Acid level') +
+                  ggtitle('Citric Acid in Red and White')
+
+grid.arrange(bp.ca, bp.ca.red, bp.ca.red.white, nrow=1)
 ```
 
 Once again I cannot see much difference in 2Q between the two subgroups. And although we can conduct ANOVA test to verify the two subgroup do have difference between, I think it is best to first review it's correlation with the dependent variable before performing ANOVA as the whole point of doing the ANOVA may become futile.  
 
-```{r chloride}
+```{r chloride, fig.width=11, fig.height=4}
 
-bp.ch <- ggplot(wine, aes(x=quality, y=chlorides, color=quality)) +
-                geom_boxplot(outlier.shape=8, outlier.color='red') +
-                stat_boxplot(geom='errorbar', width=0.3) +
-                xlab('Quality level') +
-                ylab('Chloride level') +
-                ggtitle('Chloride level')
+bp.ch <- ggplot(wine.grouped, aes(x=quality, y=chlorides, color=quality)) +
+          geom_boxplot(outlier.shape=8, outlier.color='red') +
+          stat_boxplot(geom='errorbar', width=0.3) +
+          xlab('Quality level') +
+          ylab('Chloride level') +
+          ggtitle('Chloride level in White Wine')
 
+bp.ch.red <- ggplot(redwine.grouped, aes(x=quality, y=chlorides, color=quality)) +
+              geom_boxplot(outlier.shape=8, outlier.color='red') +
+              stat_boxplot(geom='errorbar', width=0.3) +
+              xlab('Quality level') +
+              ylab('Chloride level') +
+              ggtitle('Chloride level in Red Wine')
 
-bp.ch
+bp.ch.red.white <- ggplot(wine.collated.grouped[wine.collated.grouped[, 'quality']=='high',], aes(x=wine.type, y=chlorides, color=wine.type)) +
+                    geom_boxplot(outlier.shape=8, outlier.color='red') +
+                    stat_boxplot(geom='errorbar', width=0.3) +
+                    xlab('Quality level') +
+                    ylab('Chloride level') +
+                    ggtitle('Chloride level in White and Red')
+
+grid.arrange(bp.ch, bp.ch.red, bp.ch.red.white, nrow=1)
 
 ```
 
@@ -612,7 +689,7 @@ bp.density.w.quality <- ggplot(wine, aes(x=quality, y=density, color=quality)) +
                       stat_boxplot(geom='errorbar', width=0.3) +
                       xlab('Quality') +
                       ylab('Density') +
-                      ylim(0.985, 1.005) +
+                      # ylim(0.985, 1.005) +
                       ggtitle('Density in White Wine')
 
 bp.density.r.quality <- ggplot(redwine, aes(x=quality, y=density, color=quality)) +
@@ -620,15 +697,15 @@ bp.density.r.quality <- ggplot(redwine, aes(x=quality, y=density, color=quality)
                         stat_boxplot(geom='errorbar', width=0.3) +
                         xlab('Quality') +
                         ylab('Density') +
-                        ylim(0.985, 1.005) +
+                        # ylim(0.985, 1.005) +
                         ggtitle('Density in Red Wine')
 
-bp.density <- ggplot(wine.collated, aes(x=wine.type, y=density, color=wine.type)) +
+bp.density <- ggplot(wine.collated.grouped[wine.collated.grouped[, 'quality']=='high',], aes(x=wine.type, y=density, color=wine.type)) +
               geom_boxplot(outlier.shape=8, outlier.color='red') +
               stat_boxplot(geom='errorbar', width=0.3) +
               xlab('Wine Type') +
               ylab('Density') +
-              ylim(0.985, 1.005) +
+              # ylim(0.985, 1.005) +
               ggtitle('How density is distributed in red and white wine')
 # bp.density
 grid.arrange(bp.density.w.quality, bp.density.r.quality, bp.density, nrow=1)
@@ -645,6 +722,38 @@ ylim(0.984, 1.005)
 ggtitle('How density and alcohol are correlated')
 ```
 
+```{r, fig.width=11, fig.height=4}
+
+bp.sul.w <- ggplot(wine, aes(x=quality, y=sulphates, color=quality)) +
+                      geom_boxplot(outlier.shape=8, outlier.color='red') +
+                      stat_boxplot(geom='errorbar', width=0.3) +
+                      xlab('Quality') +
+                      ylab('Sulphates') +
+                      # ylim(0.985, 1.005) +
+                      ggtitle('Sulphates in White Wine')
+
+bp.sul.r <- ggplot(redwine, aes(x=quality, y=sulphates, color=quality)) +
+                        geom_boxplot(outlier.shape=8, outlier.color='red') +
+                        stat_boxplot(geom='errorbar', width=0.3) +
+                        xlab('Quality') +
+                        ylab('Sulphates') +
+                        # ylim(0.985, 1.005) +
+                        ggtitle('Sulphates in Red Wine')
+
+bp.sul <- ggplot(wine.collated.grouped[wine.collated.grouped[, 'quality']=='high',], aes(x=wine.type, y=sulphates, color=wine.type)) +
+              geom_boxplot(outlier.shape=8, outlier.color='red') +
+              stat_boxplot(geom='errorbar', width=0.3) +
+              xlab('Wine Type') +
+              ylab('Sulphates') +
+              # ylim(0.985, 1.005) +
+              ggtitle('Sulphates in red and white wine') 
+
+grid.arrange(bp.sul.w, bp.sul.r, bp.sul, nrow=1)
+
+```
+
+The sulphate is a preservative and red wine typically possess a lot of aroma and fixed acidity than white wine and in order to preserve the chemical properties, I think it makes sense to see the association between high quality wine and high level of Sulphate being more profound in red wine than in white wine. We will check if there is statistical difference between two subgroups of sulphate in low and high quality level.  
+
 From the EDA conducted above, we can conclude a good quality Vinho Verde should describe the following properties:  
 
 1. Red wines with more vinegar like taste and white wines with less fixed acidity  
@@ -657,6 +766,16 @@ I don't think it would be a good idea to list all exhaustive criterias as we wil
 # Statistical Analyses  
 
 In this section, I wish to show statistical test results only for those variables that actually require them.  
+
+## Statistical significance between two high and low quality in Sulphate  
+
+```{r, results='markup'}
+aov.sulp <- aov(sulphates~quality, data=wine.grouped)
+aov.sulp
+summary(aov.sulp)
+```
+
+In White wine, the sulphate level does not appear to show statistical significance between two subgroups and hence I conclude any difference between them are just due to mere chance (Fail to reject $H_{0}$).  
 
 ## Correlation test between Total sulfur dioxide and Free sulfur dioxide  
 
