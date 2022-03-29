@@ -45,7 +45,8 @@ library(latex2exp)
 # Chapter 1: Introduction  
 
 Wine is an alcoholic beverage that has been produced for over thousands of years and was originally founded in Georgia from 6000BC. The religious root the drink has, caused many to consume in the remembrance of God and this widened the trade across Europe. People consume wine also for its wonderful sweet taste and nutritious properties that are beneficial to health. While there are many types of wines, two of the most famous variants would be the Red and White versions produced mostly in the Europe. Wines that were once expensive to buy, are increasingly enjoyed by consumers around the world and the market is expected to grow annually by 7.22% (CAGR 2022-2025)[1]. Wine industries are researching different methods involved in the process of creating and selling wines at the same time retaining its quality to support its growth. Wines are sold at different price ranges depending on its quality, while the least expensive could be as low as $4, the pinnacle of wines could cost beyond $200 per bottle. Given a bottle of wine could be sold for over $200, we decided to conduct analyses to better understand what gives rise to the quality and their associated benefits by assessing publicly available dataset downloaded from UCI Machine Learning Repository.  
-```{r}
+
+```{r, include=F}
 
 wine.orig <- read.csv(file='winequality-white.csv',
                       header=T,
@@ -65,13 +66,72 @@ redwine.orig <- read.csv(file='winequality-red.csv',
 
 ```
 
-```{r group_quality}
+```{r clean, include=F}
+wine.orig <- outlierKD2(wine.orig, fixed.acidity, rm=T, histogram=F)
+wine.orig <- outlierKD2(wine.orig, volatile.acidity, rm=T, histogram=F)
+wine.orig <- outlierKD2(wine.orig, citric.acid, rm=T, histogram=F)
+wine.orig <- outlierKD2(wine.orig, residual.sugar, rm=T, histogram=F)
+wine.orig <- outlierKD2(wine.orig, chlorides, rm=T, histogram=F)
+wine.orig <- outlierKD2(wine.orig, free.sulfur.dioxide, rm=T, histogram=F)
+wine.orig <- outlierKD2(wine.orig, total.sulfur.dioxide, rm=T, histogram=F)
+wine.orig <- outlierKD2(wine.orig, density, rm=T, histogram=F)
+wine.orig <- outlierKD2(wine.orig, pH, rm=T, histogram=F)
+wine.orig <- outlierKD2(wine.orig, sulphates, rm=T, histogram=F)
+wine.orig <- outlierKD2(wine.orig, alcohol, rm=T, histogram=F)
+
+redwine.orig <- outlierKD2(redwine.orig, fixed.acidity, rm=T, histogram=F)
+redwine.orig <- outlierKD2(redwine.orig, volatile.acidity, rm=T, histogram=F)
+redwine.orig <- outlierKD2(redwine.orig, citric.acid, rm=T, histogram=F)
+redwine.orig <- outlierKD2(redwine.orig, residual.sugar, rm=T, histogram=F)
+redwine.orig <- outlierKD2(redwine.orig, chlorides, rm=T, histogram=F)
+redwine.orig <- outlierKD2(redwine.orig, free.sulfur.dioxide, rm=T, histogram=F)
+redwine.orig <- outlierKD2(redwine.orig, total.sulfur.dioxide, rm=T, histogram=F)
+redwine.orig <- outlierKD2(redwine.orig, density, rm=T, histogram=F)
+redwine.orig <- outlierKD2(redwine.orig, pH, rm=T, histogram=F)
+redwine.orig <- outlierKD2(redwine.orig, sulphates, rm=T, histogram=F)
+redwine.orig <- outlierKD2(redwine.orig, alcohol, rm=T, histogram=F)
+
+```
+
+**Summary of the dataset after cleaning**
+```{r, results='asis'}
+xkablesummary(wine.orig)
+```
+
+As we can now see, there are many NA's after removing the outliers. From what I have understood, I think it's best to replace NA's with 2Q (median) thereby not affecting our statistics.  
+
+```{r replace.nas}
+tmp.cnames <- cnames
+# Let's get rid of quality for now as it would not make sense to replace them
+tmp.cnames <- tmp.cnames[-length(tmp.cnames)]
+for(cname in tmp.cnames)
+{
+  tmp_median <- median(wine.orig[, cname], na.rm=T)
+  wine.orig[, cname] <- wine.orig[, cname] %>% replace_na(tmp_median)
+}
+
+for(cname in tmp.cnames)
+{
+  tmp_median <- median(redwine.orig[, cname], na.rm=T)
+  redwine.orig[, cname] <- redwine.orig[, cname] %>% replace_na(tmp_median)
+}
+
+```
+
+**Summary of the dataset after replacing NA's by median**  
+
+```{r, results='asis'}
+xkablesummary(wine.orig)
+```
+
+```{r tmp_assignment}
 wine <- wine.orig
 redwine <- redwine.orig
 
 wine$quality <- as.factor(wine$quality)
 redwine$quality <- as.factor(redwine$quality)
 ```
+
 # Chapter 2: Description of the data  
 
 ## Source Data  
@@ -94,15 +154,15 @@ describe(wine)
 Variable | Description
 ------- | -------
 fixed.acidity | nonvolatile acidity represents the acetic acid in wine
-volatile.acidity | level of acidic elements of a wine that are gaseous
+volatile.acidity | represents the amount of aromatic flavour
 citric.acid | level of fresh flavor added to a finished wine
 residual.sugar | amount of sugar left unfermented in a finished wine. This affects the sweetness of the wine
-chlorides | 
-free.sulfur.dioxide | 
-total.sulfur.dioxide | 
-density |
+chlorides | Saltiness in wine
+free.sulfur.dioxide | portion of sulfur dioxide that is free in wine
+total.sulfur.dioxide | the portion of sulfur dioxide that is free plus the portion that is bound to other chemicals 
+density | level of consistency
 pH | represents how acidic or basic the water is
-sulphates | Substance produced 
+sulphates | Amount of antimicrobials in wine to prevent oxidation and spoilage 
 alcohol | Alcohol level in wine
 quality | represents rating for the quality of the wine
 
@@ -123,8 +183,8 @@ As it can be inferred from the above table, grapes that are harvested before the
 "Despite concerns over the pace of change, many independent producers are experimenting more now and concentrating predominantly on the quality of the wine rather than on quantity.  This is leading to drier, richer and less spritzy styles with greater ripeness of fruit evident on the palate and improved export sales, particular to the US, with a growing base of new consumers. Whether or not we want to admit it, statistically, America does have a sweet tooth" [alcohol professor](https://www.alcoholprofessor.com/blog-posts/blog/2014/04/23/vinho-verde-a-splash-of-summer-vinous-joy)
 
 The association of alcohol level with wine quality is more profound with red wine. The yeast is not applied only to the grape juice instead to the entire grapes including skin, which gives red wine the color, aroma, and the sweet flavor it has. Acids are crucial in boosting the effects of sulfur dioxide $SO_2$, which ensures the wine has longer shelf life protecting it from becoming rotten. A good acidity level also fends off most unwanted bacteria, as these compounds are unable to survive in low pH solutions. [vivino](https://www.vivino.com/wine-news/why-is-acid-so-important-in-wine#:~:text=Acids%20are%20crucial%20in%20boosting,survive%20in%20low%20pH%20solutions)
-It is also believed, without drifting far from the scope of this analysis, that acidity and Ph level do have some correlation between them.  
 
+It is also believed, without drifting far from the scope of this analysis, acidity and Ph levels have correlation between them.  
 
 # Chapter 3: Smart Questions  
 
@@ -133,11 +193,8 @@ It is also believed, without drifting far from the scope of this analysis, that 
 3. Are there different acidity levels that are heavily correlated and how do they affect quality?
 4. Can we describe an example for a high quality Vinho verde?
 5. Are there any independent variables that are highly correlated with each other ?
-6. Do the mean chemical levels for different wine quality remain the same ?
-7. Are wines with less ABV are more acidic compared to those with high ABV ?
 
-
-# Chapter 4: Exploratory Data Analysis
+# Chapter 4: Exploratory Data Analysis  
 
 ```{r, include=F}
 wine.colnames <- colnames(wine)
@@ -163,45 +220,123 @@ ggplot(wine.collated, aes(quality, fill=wine.type)) +
 
 ```
 
-**White wine quality summary**
-```{r white_summary, results='asis'}
-summary(wine1$quality)
-```
-
-In White Wine, there are only 5 data points for quality level 9 so we have decided not to account them for any further analyses  
+## Alcohol distribution
 
 ```{r}
+# , fig.width=11, fig.height=4
+bp.al <- ggplot(wine, aes(x=quality, y=alcohol, color=quality, group=quality)) +
+         geom_boxplot(outlier.shape=8, outlier.color='red') +
+         stat_boxplot(geom='errorbar', width=0.3) +
+         xlab('Quality level') +
+         ylab("Alcohol level %") +
+         ggtitle('Alcohol level found in different quality levels of white wine')
+
+bp.al
+
 ```
 
-**Red wine quality summary**
-```{r red_summary, results='asis'}
-summary(redwine$quality)
+It is somewhat muddy to draw conclusion from the above plot as the first two quality levels are negatively correlated with alcohol, while the levels from 6 are positive correlated. We believe it would be best to group the quality levels so that we can compare the difference between the second quartile of low and high quality wines. Before proceeding to grouping, it is essential to first understand which levels to combine and the best solution we can think of now is to use a clustering model that will cluster data points that are closer in terms of Euclidean distance. Then any quality levels that are highly clustered can throw light onto finding a threshold to combine different group together.  
+
+```{r kmeans}
+library(class)
+
+# Let's remove quality column so that kmeans can handle continuous data
+tmp_cnames <- colnames(wine)
+tmp_cnames <- tmp_cnames[-length(tmp_cnames)]
+
+# I don't think 1000 iterations would be required, by the way, I wanted
+# a more robust clustering. Hence, I chose a really high number
+# For even better clustering, we should consider using more mature
+# algorithms such as GMM that clusters datapoints of different statistical
+# parameter such as not just mean, but also variance.
+# For now, I think this is fine.
+tmp_model <- kmeans(wine[, tmp_cnames], centers=2, iter.max = 1000)
+
+ncluster1 <- sum(tmp_model$cluster == 1)
+ncluster2 <- sum(tmp_model$cluster == 2)
+
+cluster1 <- data.frame(matrix(nrow=ncluster1, ncol=length(colnames(wine))))
+cluster2 <- data.frame(matrix(nrow=ncluster2, ncol=length(colnames(wine))))
+
+colnames(cluster1) <- cnames
+colnames(cluster2) <- cnames
+
+c1_idx <- 1
+c2_idx <- 1
+idx <- 1
+for(x in tmp_model$cluster)
+{
+  if(x == 1){
+    cluster1[c1_idx,] <- wine[idx,]
+    c1_idx <- c1_idx + 1
+  }
+  else{
+    cluster2[c2_idx,] <- wine[idx,]
+    c2_idx <- c2_idx + 1
+  }
+  idx <- idx + 1
+}
 ```
 
+```{r cluster_hist, fig.width=11, fig.height=4}
 
-## Correlation between variables
-Visualizing highly correlated features  
+cluster1 <- ggplot(cluster1, aes(x=quality, fill=quality)) +
+            geom_histogram() +
+            ggtitle('Cluster 1')
 
-```{r}
+cluster2 <- ggplot(cluster2, aes(x=quality, fill=quality)) +
+            geom_histogram() +
+            ggtitle('Cluster 2')
 
-pairs(wine)
+grid.arrange(cluster1, cluster2, nrow=1)
+
 ```
 
+Since cluster1 has more data points associated with lower quality levels we decide level 6 acts as a threshold. For any data points with quality level $<=6$ will be categorized as low quality and for those that have quality $>6$ will be grouped as high quality wines.  
 
-```{r, include=F, fig.width=11}
+```{r partition}
+# Variable name wine refers to white wine, while redwine explicitly means red wine
+# wine.collated means it has both white and red wine in it
+# grouped term refers to quality 3-6 combined as low and 7-9 combined as high
 
-tmp_wine <- wine[wine[, 'quality']==9,]
-quality_index <- which(colnames(tmp_wine)=='quality')
-tmp_wine <- tmp_wine[, -quality_index]
+# We use wine.orig to capture since quality in wine.orig is numeric instead of factors
+bad <- wine[wine.orig[,'quality'] <= 6,]
+good <- wine[wine.orig[,'quality'] > 6,]
 
-cor <- corrplot(cor(tmp_wine),
-                type='upper',
-                method='number')
+bad$quality <- 'low'
+good$quality <- 'high'
+bad$quality <- as.factor(bad$quality)
+good$quality <- as.factor(good$quality)
+
+wine.grouped <- rbind(bad, good)
+wine.grouped <- cbind(wine.grouped, rep('white', nrow(wine.grouped)))
+cnames_wtype <- c(cnames, 'wine.type')
+colnames(wine.grouped) <- cnames_wtype
+# Since doing this at a later stage, I wish all analyses will reflect on this
+# grouped data from this point onward.
+wine <- wine.grouped
+
+bad.redwine <- redwine[redwine.orig[,'quality'] <= 6,]
+good.redwine <- redwine[redwine.orig[,'quality'] > 6,]
+
+bad.redwine$quality <- 'low'
+good.redwine$quality <- 'high'
+bad.redwine$quality <- as.factor(bad.redwine$quality)
+good.redwine$quality <- as.factor(good.redwine$quality)
+
+redwine.grouped <- rbind(bad.redwine, good.redwine)
+redwine.grouped <- cbind(redwine.grouped, rep('red', nrow(redwine.grouped)))
+colnames(redwine.grouped) <- cnames_wtype
+redwine <- redwine.grouped
+
+wine.collated.grouped <- rbind(wine.grouped, redwine.grouped)
+wine.collated.grouped$wine.type <- as.factor(wine.collated.grouped$wine.type)
 ```
 
 ## Answering SMART Questions  
 
-### Analysing how various alcohol level affect the overall quality 
+### Analysing how various alcohol level affect the overall quality  
+
 ```{r quality}
 # , fig.width=11, fig.height=4
 bp.al <- ggplot(wine, aes(x=quality, y=alcohol, color=quality, group=quality)) +
@@ -214,97 +349,11 @@ bp.al <- ggplot(wine, aes(x=quality, y=alcohol, color=quality, group=quality)) +
 bp.al
 
 ```
-It is somewhat muddy to draw conclusion from the above plot as the first two quality levels are negative correlated with alcohol, while the levels from 5 are positive correlated. We believe it would be best to group the quality levels so that we can on average what the correlation is. Before proceeding to grouping, it is essential to first understand which levels to combine and the best way we believe is create KMeans model that will cluster data points that are closer in terms of Euclidean distance. Then any data point in a particular cluster with least frequency can be considered an outlier.
 
-```{r knn}
-library(class)
-
-# wine.woo wine dataset without outliers
-wine.woo <- wine.orig
-# for(cidx in 1:(length(cnames)-1))
-# {
-#   wine.woo[, cidx] <- outlierKD2(wine.orig, var=cidx, rm=T, boxplt=F, histogram=F)
-# }
-
-tmp_model <- kmeans(wine.woo[, cnames[-length(cnames)]], centers=2, iter.max = 500 )
-
-ncluster1 <- sum(tmp_model$cluster == 1)
-ncluster2 <- sum(tmp_model$cluster == 2)
-
-cluster1 <- data.frame(matrix(nrow=ncluster1, ncol=length(cnames)))
-cluster2 <- data.frame(matrix(nrow=ncluster2, ncol=length(cnames)))
-
-colnames(cluster1) <- cnames
-colnames(cluster2) <- cnames
-
-c1_idx <- 1
-c2_idx <- 1
-idx <- 1
-for(x in tmp_model$cluster)
-{
-  if(x == 1){
-    cluster1[c1_idx,] <- wine.woo[idx,]
-    c1_idx <- c1_idx + 1
-  }
-  else{
-    cluster2[c2_idx,] <- wine.woo[idx,]
-    c2_idx <- c2_idx + 1
-  }
-  idx <- idx + 1
-}
-```
-
-```{r cluster_hist}
-ggplot(cluster1, aes(x=quality, fill=quality)) +
-geom_histogram()
-
-ggplot(cluster2, aes(x=quality, fill=quality)) +
-geom_histogram()
-
-# cluster.summary <- data.frame(matrix(nrow=1, ncol=length(unique(wine$quality))))
-# for(i in 1:length(unique(wine$quality)))
-# {
-#   
-# }
-
-```
-
-Since cluster1 has more data points associated with lower quality levels we decide level 6 acts as a threshold. For any data points with quality level $<=6$ will be categorized as low and $>6$ as high quality wines.
-
-```{r partition}
-bad <- wine.woo[wine.orig[,'quality'] <= 6,]
-good <- wine.woo[wine.orig[,'quality'] > 6,]
-
-bad$quality <- 'low'
-good$quality <- 'high'
-bad$quality <- as.factor(bad$quality)
-good$quality <- as.factor(good$quality)
-
-wine.grouped <- rbind(bad, good)
-wine.grouped <- cbind(wine.grouped, rep('white', nrow(wine.grouped)))
-cnames_wtype <- c(cnames, 'wine.type')
-colnames(wine.grouped) <- cnames_wtype
-
-bad.redwine <- redwine.orig[redwine.orig[,'quality'] <= 6,]
-good.redwine <- redwine.orig[redwine.orig[,'quality'] > 6,]
-
-bad.redwine$quality <- 'low'
-good.redwine$quality <- 'high'
-bad.redwine$quality <- as.factor(bad.redwine$quality)
-good.redwine$quality <- as.factor(good.redwine$quality)
-
-redwine.grouped <- rbind(bad.redwine, good.redwine)
-redwine.grouped <- cbind(redwine.grouped, rep('red', nrow(redwine.grouped)))
-colnames(redwine.grouped) <- cnames_wtype
-
-wine.collated.grouped <- rbind(wine.grouped, redwine.grouped)
-wine.collated.grouped$wine.type <- as.factor(wine.collated.grouped$wine.type)
-```
-
-From the above box and whisker plot, better quality is indeed associated with increased level of alcohol level as was our finding from the prior research. Now, it is time to understand the connection between alcohol level and residual sugar as it was understood from the prior research that high alcohol content is produced by the fermentation process by converting grape sugar into ethanol.
+The above box and whisker plot confirms that better quality is indeed associated with increased level of alcohol level as was also our finding from the prior research. Now, it is time to understand the connection between alcohol level and residual sugar as it was understood from the prior research that alcohol is produced by the fermentation process by converting grape sugar into ethanol.  
 
 ```{r, fig.width=11, fig.height=4}
-sp.al_rs <- ggplot(wine, aes(x=alcohol, y=residual.sugar, color=quality)) +
+sp.al_rs <- ggplot(wine.grouped, aes(x=alcohol, y=residual.sugar, color=quality)) +
             geom_point(alpha=0.5) +
             xlab('Alcohol level') +
             ylab('Residual Sugar') +
@@ -312,7 +361,7 @@ sp.al_rs <- ggplot(wine, aes(x=alcohol, y=residual.sugar, color=quality)) +
             theme(legend.position='left')
 sp.al_rs <- ggMarginal(sp.al_rs, type='boxplot', fill='darkgray')
 
-bp.rs <- ggplot(wine, aes(x=quality, y=residual.sugar, color=quality, group=quality)) +
+bp.rs <- ggplot(wine.grouped, aes(x=quality, y=residual.sugar, color=quality, group=quality)) +
          geom_boxplot(outlier.shape=8, outlier.color='red') +
          stat_boxplot(geom='errorbar', width=0.3) +
          xlab('Quality level') +
@@ -322,17 +371,31 @@ bp.rs <- ggplot(wine, aes(x=quality, y=residual.sugar, color=quality, group=qual
 grid.arrange(sp.al_rs, bp.rs, nrow=1)
 
 ```
+
+From the macroscopic level, the correlation may not be very visible. Perhaps a correlation test can provide strong confidence on the correlation number as was taught in the lectures that lower correlation coefficient does not necessarily mean weak correlation. Only correlation test results can be reliable.  
+
+**Correlation between alcohol and residual sugar in high quality wines**  
+
+```{r}
+cor.test(good$alcohol, good$residual.sugar)
+```
+
+**Correlation between alcohol and residual sugar in low quality wines**  
+
+```{r}
+cor.test(bad$alcohol, bad$residual.sugar)
+```
+
 It is surprising that our expectation was not backed by the results conveyed by the plots above, but we think there are two things that must be held accountable for this finding:  
 
-1. Residual sugar is not the same as sugar level in the grapes.
+1. Residual sugar is not the same as sugar level in the grapes.  
 
 **Terminology Alert**  
 Residual sugar represents the amount of sugar that is left after the fermentation process.  
 
+We are not sure at this point whether this can directly represent the level of sugar in the wine and strongly believe this would be inversely proportional. What we mean by that is the residual sugar level does not necessary allow us to infer what the original sugar level was in the grape juice prior to the fermentation process. Hence, we believe it would be safe to presume that the lesser the residual sugar level is the higher the sugar got decomposed into alcohol and this is evident from the above plot. Also the correlation between alcohol level and the residual sugar is `r cor(wine$alcohol, wine$residual.sugar)`  
 
-We are not sure at this point whether this can directly represent the level of sweetness in the wine as it could be inversely proportional. What we mean by that is the residual sugar level does not necessary allow us to infer what the original sugar level was in the grape juice prior to the fermentation process. Hence, we believe it would be safe to presume that the lesser the residual sugar level is the higher the sugar got decomposed into alcohol and this is evident from the above plot. Also the correlation between alcohol level and the residual sugar is `r cor(wine$alcohol, wine$residual.sugar)`
-
-2. The type of wine is what must be held accountable for this finding.  
+2. Analyzing the how alcohol and residual sugar are correlated in red wine can provide more information.  
 
 ```{r alcohol_residual_sugar}
 
@@ -365,11 +428,7 @@ ggtitle('Alcohol level in red and white wines')
 
 ```
 
-
-It is understood that red wine typically has more alcohol than the white wine [Masterclass](https://www.masterclass.com/articles/learn-about-alcohol-content-in-wine-highest-to-lowest-abv-wines#does-white-wine-or-red-wine-have-higher-alcohol-content) but the above boxplot shows the opposite. 
-
-***DO YOU WANT TO ADD THIS LINE***
-Perhaps the dataset for red wine is only a fraction of what we have for white wine that is causing confusion.  
+It is understood that red wine typically has more alcohol than the white wine [Masterclass](https://www.masterclass.com/articles/learn-about-alcohol-content-in-wine-highest-to-lowest-abv-wines#does-white-wine-or-red-wine-have-higher-alcohol-content) but the above boxplot shows the opposite. We believe this difference is due to the fact Vinho Verde wines are made with grapes harvested before they are fully ripe which means they have slightly more punchy notes than typical red wines do. And obviously, other acidity can also be accounted for this.  
 
 ### How does the pH level affect the wine quality?  
 
@@ -386,7 +445,7 @@ ggtitle('Distribution of pH level in wine')
 The above boxplot between white and red wine confirms our hypothesis that white wine is more acidic compared to that of red wine, but what constitutes to the quality is the question. In order to answer, it would be first relevant to see how the pH level varies across different quality levels.  
 
 ```{r, }
-#fig.width=11, fig.height=4
+
 bp.ph.white <- ggplot(wine, aes(x=quality, y=pH, color=quality)) +
                geom_boxplot(outlier.shape=8, outlier.color='red') +
                stat_boxplot(geom='errorbar') +
@@ -395,19 +454,11 @@ bp.ph.white <- ggplot(wine, aes(x=quality, y=pH, color=quality)) +
                ggtitle('Distribution of pH level in white wine')
 bp.ph.white
 
-# bp.ph.red <-   ggplot(redwine, aes(x=quality, y=pH, color=quality)) +
-#                geom_boxplot(outlier.shape=8, outlier.color='red') +
-#                stat_boxplot(geom='errorbar') +
-#                xlab('Quality') +
-#                ylab('pH') +
-#                ggtitle('Distribution of pH level in red wine')
-# 
-# grid.arrange(bp.ph.white, bp.ph.red, nrow=1)
 
 ```
-At this point, we believe pH is just one of the factors and is not directly related to quality as both low and high quality wines have similar pH level. We believe there must be other factors that affect the overall quality.  
+It is commonly believed that many of the Americans prefer sweeter wines (vinepair)[https://vinepair.com/articles/sweet-wine-dry-culture/] and it makes sense why higher pH level on average is linked to high quality while low average pH is linked to low quality wines. We believe the process of winemaking has reflected on user preference.  
 
-```{r, include=T}
+```{r, include=F}
 # wine.1 represents white wine dataset
 by_quality <- wine1 %>% group_by(quality)
 wine1.summary <- by_quality %>% summarise(pH = mean(pH))
@@ -425,7 +476,7 @@ wine.summary <- rbind(wine1.summary, wine2.summary)
 
 ```
 
-```{r, include=T, fig.height=4, fig.width=11}
+```{r, include=F, fig.height=4, fig.width=11}
 grouped_bar <- ggplot(wine.summary, aes(x=quality, y=pH, fill=wine.type)) +
                geom_bar(position="dodge", stat="identity") +
                ggtitle('Average pH level')
@@ -449,9 +500,20 @@ cplot <- corrplot(cor(wine[, acidity_cnames]),
 
 ```
 
-As can be seen from the above correlation plot, the acidity levels are not correlated with each other.  
+As mentioned earlier in the Data description section, fixed acidity refers to the level of vinegar like taste in the wine and it should be intuitive to think about fixed acidity being correlated with citric acidity as they both refer to bitter taste found in the wine.  
 
-```{r fixed.acidity, fig.width=11, fig.height=4}
+When it comes to total sulfur dioxide, free sulfur dioxide and sulphates, I personally found it a little daunting to understand these variables especially the distinction between them as most of the resources I referred to were either pointing to the same definition or chemistry-related explanation. However, in simple terms, Sulphates refer to the level of antimicrobial elements in the wine that prevents oxidation and spoilage. Oxidation is a process of altering a chemical's properties when exposed to oxygen $O_{2}$ over period of time. This may involve losing the wine's color, aromatic falvor, etc., Although it may make sense to perceive Sulphate as being correlated with the overall quality, it may not make much sense to conclude as far as the quality of taste is concerned given we consume the wine at a bar, where it is expected to finish on the same day it is opened.  
+
+```{r}
+sulfur_cnames <- c('total.sulfur.dioxide', 'free.sulfur.dioxide', 'sulphates')
+s.cplot <- corrplot(cor(wine[, sulfur_cnames]),
+                    type='upper',
+                    method='circle')
+```
+
+Not surprised by the results, they do have a lot in common.  
+
+```{r fixed.acidity, fig.width=12, fig.height=4}
 
 bp.fa <- ggplot(wine, aes(x=quality, y=fixed.acidity, color=quality, group=quality)) +
          geom_boxplot(outlier.shape=8, outlier.color='red') +
@@ -459,6 +521,7 @@ bp.fa <- ggplot(wine, aes(x=quality, y=fixed.acidity, color=quality, group=quali
          xlab('Quality level') +
          ylab(TeX('Fixed Acidity level $x 10^{3} mg/L $')) +
          ggtitle("Distribution of fixed acidity in white wine")
+
 
 bp.fa.red <- ggplot(redwine, aes(x=quality, y=fixed.acidity, color=quality, group=quality)) +
              geom_boxplot(outlier.shape=8, outlier.color='red') +
@@ -472,23 +535,24 @@ bp.fa_wr <- ggplot(wine.collated, aes(x=wine.type, y=fixed.acidity, color=wine.t
             stat_boxplot(geom='errorbar', width=0.3) +
             ggtitle('Distribution of fixed acidity in white and red')
 
-grid.arrange(bp.fa.red, bp.fa, nrow=1)
+grid.arrange(bp.fa.red, bp.fa, bp.fa_wr, nrow=1)
+# bp.fa_wr
 ```
+It is an interesting finding that high level of fixed acidity in red wine is high quality, while the low level of fixed acidity in white wine is linked to being better in quality. And the last plot answers the question "whether red wine is more vinegar like in taste along with the sweet?" and as it appears red wines with more vinegar like taste and white wines with more fresher flavor is considered better in quality.  
 
 ### Are there any independent variables that are highly correlated with each other ?  
 
 ```{r, results='asis'}
 ind_cnames <- colnames(wine)
 ind_cnames <- ind_cnames[1:length(ind_cnames)-1]
-corrplot(cor(wine[, ind_cnames]),
+corrplot(cor(wine.orig[, ind_cnames]),
          type='upper',
          method='circle')
 ```
 
---------- REMOVE DENSITY VARIABLE AS IT IS HIGHLY CORRELATED WITH RESIDUAL SUGAR
-
 ```{r volatile.acidity}
-bp.va <- ggplot(wine.grouped, aes(x=quality, y=volatile.acidity, color=quality)) +
+
+bp.va <- ggplot(wine, aes(x=quality, y=volatile.acidity, color=quality)) +
           geom_boxplot(outlier.shape=8, outlier.color='red') +
           stat_boxplot(geom='errorbar', width=0.3) +
            xlab('Quality level') +
@@ -498,17 +562,7 @@ bp.va <- ggplot(wine.grouped, aes(x=quality, y=volatile.acidity, color=quality))
 bp.va
 ```
 
-```{r}
-bp.fa <- ggplot(wine.grouped, aes(x=quality, y=fixed.acidity, color=quality)) +
-          geom_boxplot(outlier.shape=8, outlier.color='red') +
-          stat_boxplot(geom='errorbar', width=0.3) +
-           xlab('Quality level') +
-           ylab('Fixed Acidity level') +
-           ggtitle('Fixed Acidity distribution in low and high quality wines')
-
-bp.fa
-```
-
+This does not give us a clear picture on whether high quality is associated with what level of volatile acidity. We will look into this when we create a model.  
 
 ```{r citric.acidity}
 bp.ca <- ggplot(wine.grouped, aes(x=quality, y=citric.acid, color=quality)) +
@@ -521,9 +575,9 @@ bp.ca <- ggplot(wine.grouped, aes(x=quality, y=citric.acid, color=quality)) +
 bp.ca
 ```
 
+Once again I cannot see much difference in 2Q between the two subgroups. And although we can conduct ANOVA test to verify the two subgroup do have difference between, I think it is best to first review it's correlation with the dependent variable before performing ANOVA as the whole point of doing the ANOVA may become futile.  
 
-
-```{r chloride, fig.width=11, fig.height=4}
+```{r chloride}
 
 bp.ch <- ggplot(wine, aes(x=quality, y=chlorides, color=quality)) +
                 geom_boxplot(outlier.shape=8, outlier.color='red') +
@@ -533,36 +587,57 @@ bp.ch <- ggplot(wine, aes(x=quality, y=chlorides, color=quality)) +
                 ggtitle('Chloride level')
 
 
-bp.ch.log <- ggplot(wine, aes(x=quality, y=log(chlorides), color=quality)) +
-             geom_boxplot(outlier.shape=8, outlier.color='red') +
-             stat_boxplot(geom='errorbar', width=0.3) +
-             xlab('Quality level') +
-             ylab('Chloride level') +
-             ggtitle('Chloride level after log transformation')
-
-
-grid.arrange(bp.ch, bp.ch.log, nrow=1)
+bp.ch
 
 ```
-
-```{r }
-bp.fsd <- ggplot(wine, aes(x=quality, y=free.sulfur.dioxide, color=quality)) +
-          geom_boxplot(outlier.shape=8, outlier.color='red') +
-          stat_boxplot(geom='errorbar', width=0.3) +
-          xlab('Quality level') +
-          ylab('Chloride level') +
-          ggtitle('Free Sulfur Dioxide level')
-
-bp.fsd
-```
-
-
-
-## Statistical Analyses  
-
-### Are density and residual sugar independent  
 
 ```{r}
+# bp.density.w.quality <- ggplot(wine, aes(x=quality, y=density, color=quality)) +
+#                       geom_boxplot(outlier.shape=8, outlier.color='red') +
+#                       stat_boxplot(geom='errorbar', width=0.3) +
+#                       xlab('Quality') +
+#                       ylab('Density') +
+#                       ylim(0.985, 1.005) +
+#                       ggtitle('Density in White Wine')
+# 
+# bp.density.r.quality <- ggplot(redwine, aes(x=quality, y=density, color=quality)) +
+#                         geom_boxplot(outlier.shape=8, outlier.color='red') +
+#                         stat_boxplot(geom='errorbar', width=0.3) +
+#                         xlab('Quality') +
+#                         ylab('Density') +
+#                         ylim(0.985, 1.005) +
+#                         ggtitle('Density in Red Wine')
+
+bp.density <- ggplot(wine.collated, aes(x=wine.type, y=density, color=wine.type)) +
+              geom_boxplot(outlier.shape=8, outlier.color='red') +
+              stat_boxplot(geom='errorbar', width=0.3) +
+              xlab('Wine Type') +
+              ylab('Density') +
+              ylim(0.985, 1.005) +
+              ggtitle('How density is distributed in red and white wine')
+bp.density
+# grid.arrange(bp.density.w.quality, bp.density.r.quality, bp.density, nrow=1)
+```
+
+In terms of median difference between red and white wines, I would say white wine is always associated with lesser density. Remember lesser the residual sugar, higher the alcohol. Then lesser the density ?  
+
+Higher the alcohol is because more sugar was already decomposed into alcohol. Here is another plot to confirm the hypothesis.  
+
+```{r}
+ggplot(wine, aes(x=alcohol, y=density, color=quality)) +
+geom_point() +
+ylim(0.984, 1.005)
+ggtitle('How density and alcohol are correlated')
+```
+
+
+# Statistical Analyses  
+
+In this section, I wish to show statistical test results only for those variables that actually require them.  
+
+## Correlation test between Total sulfur dioxide and Free sulfur dioxide  
+
+```{r, results='markup'}
 tmp_model <- lm(total.sulfur.dioxide ~ free.sulfur.dioxide, data=wine)
 tmp_x <- seq(min(wine$free.sulfur.dioxide), max(wine$free.sulfur.dioxide), length.out=50)
 tmp_y <- tmp_x * tmp_model$coefficients[['free.sulfur.dioxide']] + tmp_model$coefficients[['(Intercept)']]
@@ -579,6 +654,10 @@ xlab('Free Sulfur Dioxide') +
 ylab('Total Sulfur Dioxide') +
 ggtitle('Correlation between Sulfur that is free and bound to other elements in wine')
 ```
+
+As I showed earlier in the correlation plot, cor.test does show that there is strong correlation between Free Sulfur Dioxide and Total Sulfur Dioxide with $95%$ confidence level.  
+
+## Correlation between Residual Sugar and Density  
 
 ```{r}
 
@@ -600,28 +679,38 @@ ggtitle('Correlation between Residual sugar and Density')
 
 ```
 
-### Is alcohol level the same for red and white wine  
 
-It is one of our hypothesis that a good quality wine would reflect the nature of the type of wine. For instance, white wines are generally sparkling, spritzy wines with more fresh notes compared to red wine that is more sweet with high ABV percentage.  
+## Is alcohol level the same for red and white wine  
 
-```{r, results='asis'}
+It is one of our hypothesis that a good quality wine would reflect the true nature of the type of wine. For instance, white wines are generally sparkling, spritzy wines with more fresh notes compared to red wine that is more sweet with high ABV in percentage.  
+
+```{r, results='markup'}
 aov.alcohol_winetype <- aov(alcohol~wine.type, data=wine.collated)
 summary(aov.alcohol_winetype)
 
 TukeyHSD(aov.alcohol_winetype)
 ```
 
-From the results above, I can conclude that the quality level certainly affects the alcohol level and therefore alcohol level is statistically significant for various quality levels.
+From the results above, I can conclude that the alcohol level between the two subgroups red and white wine are statistically significant. In other words they do have differences between them that is due to more than just a chance.  
 
+## Volatile Acidity  
 
-Since we are dealing with multiple classes, we reduced them by binning techniques. Yet, what we are left with is two classes and in order to find the correlation between independent and dependent variable the following model is created  
+As we may have seen in the boxplot from the EDA part, the difference in volatile acidity between two subgroups high and low quality wines were not visible from the macroscopic level. Hence I would like to run an ANOVA.  
 
-```{r}
-# 
-# model1 <- glm(quality~., data=wine.grouped, family='binomial')
-# summary(model1)
-
+```{r, results='markup'}
+aov.volatile.acidity_quality <- aov(volatile.acidity~quality, data=wine.grouped)
+summary(aov.volatile.acidity_quality)
 ```
+
+Volatile acidity refers to the aromatic flavor. I can see that the two subgroups are statistically significant, but since there is one star less, can I conclude that people have lost their senses to sense the aromatic flavor ? May be not, we will see in further analysis on how effective this variable is in terms of predicting the quality of the wine.  
+
+## Point Biserial Correlation  
+
+### Correlation between independent variables and dependent variables  
+
+As you know, we are dealing with a response variable that is dichotomous and a set of independent variables that are continuous in nature. In order to compute the correlation and to understand the variables that most affect the quality I have computed this.  
+
+
 ```{r}
 library(ltm)
 alcohol_corr <- biserial.cor(wine.grouped$alcohol, wine.grouped$quality, use = c("all.obs"), level=2)
@@ -648,19 +737,9 @@ horiz = F)
 abline(h=0.19, col=c('darkred'))
 ```
 
-quality | variable
-------- | -------
-`r alcohol_corr` | alcohol
-`r ph_corr` | pH
-`r fixed.acidity_corr` | fixed acidity
-`r volatile.acidity_corr` | volatile acidity
-`r density_corr` | density
-`r sulphates_corr` | sulphates
-`r total.sulfur.dioxide_corr` | total sulfur dioxide
-`r free.sulfur.dioxide_corr` | free sulfur dioxide
-`r chlorides_corr` | chlorides
-`r residual.sugar_corr` | residual sugar
-`r citric.acid_corr` | citric acid
+## Correlation between wine.type and other variables excluding quality
+
+I thought it would also be interesting to show what variables play a critical role in deciding the type of wine.  
 
 ```{r}
 alcohol_corr <- biserial.cor(wine.collated.grouped$alcohol, wine.collated.grouped$wine.type, use = c("all.obs"), level=2)
@@ -686,25 +765,85 @@ horiz = F)
 abline(h=0.19, col=c('darkred'))
 ```
 
-quality | variable
-------- | -------
-`r alcohol_corr` | alcohol
-`r ph_corr` | pH
-`r fixed.acidity_corr` | fixed acidity
-`r volatile.acidity_corr` | volatile acidity
-`r density_corr` | density
-`r sulphates_corr` | sulphates
-`r total.sulfur.dioxide_corr` | total sulfur dioxide
-`r free.sulfur.dioxide_corr` | free sulfur dioxide
-`r chlorides_corr` | chlorides
-`r residual.sugar_corr` | residual sugar
-`r citric.acid_corr` | citric acid
+I believe the abline may not be entirely correct, but I will learn in the coming classes on how to use it more appropriately.  
 
-```{r}
+## Is density statistically significant between two quality levels  
+
+```{r, include='markup'}
 aov.density_quality <- aov(density~quality, data=wine.grouped)
 summary(aov.density_quality)
 
-# TukeyHSD(aov.density_quality)
+TukeyHSD(aov.density_quality)
+```
+# Modeling  
+
+```{r test_model, results='asis'}
+test.model <- glm(quality ~ ., data=wine.grouped[-length(colnames(wine.grouped))], family='binomial')
+summary(test.model)
+```
+Starting off with highly correlated variable  
+
+```{r glm1, results='asis'}
+model1 <- glm(quality ~ alcohol, data=wine.grouped, family='binomial')
+summary(model1)
 ```
 
+I do not want to use density as it is highly correlated with alcohol. The next highly correlated predictor variable with response variable is chlorides.  
+
+```{r glm2, results='asis'}
+model2 <- glm(quality ~ alcohol+chlorides, data=wine.grouped, family='binomial')
+summary(model2)
+```
+```{r, results='markup'}
+xkablevif(model2)
+```
+
+```{r glm3, results='asis'}
+model3 <- glm(quality ~ alcohol+chlorides+free.sulfur.dioxide, data=wine.grouped, family='binomial')
+summary(model3)
+```
+I did not include Total Sulfur Dioxide as it did not statistical significance.  
+
+```{r, results='asis'}
+xkablevif(model3)
+```
+I wish to ignore the VIF score that is slightly higher than 10.  
+
+```{r, results='asis'}
+model4 <- glm(quality ~ alcohol+chlorides+free.sulfur.dioxide+residual.sugar, data=wine.grouped, family='binomial')
+summary(model4)
+```
+
+```{r, results='markup'}
+xkablevif(model4)
+```
+
+You can clearly see residual sugar is over the limit. This is because, residual sugar is correlated with alcohol. Remember the results I conveyed in the EDA part ?  
+
+```{r, results='asis'}
+model5 <- glm(quality ~ alcohol+chlorides+free.sulfur.dioxide+residual.sugar+sulphates, data=wine.grouped, family='binomial')
+summary(model5)
+```
+```{r, results='markup'}
+xkablevif(model5)
+```
+
+As I can clearly see adding Sulphates clearly increase the VIF score. Hence I will discard that model  
+
+```{r, results='asis'}
+model6 <- glm(quality ~ alcohol+chlorides+free.sulfur.dioxide+residual.sugar+sulphates+pH, data=wine.grouped, family='binomial')
+summary(model6)
+```
+
+```{r, results='markup'}
+xkablevif(model6)
+```
+This as well increases the VIF score for the rest as they all suggest multicollinearity between them. I will discard this model as well.  
+
+```{r, results='asis'}
+an.md <- anova(model1, model2, model3, model4, model5, model6)
+an.md
+summary(an.md)
+
+```
 
