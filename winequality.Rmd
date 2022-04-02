@@ -377,6 +377,32 @@ grid.arrange(sp.al_rs, bp.rs, nrow=1)
 
 From the macroscopic level, the correlation may not be very visible. Perhaps a correlation test can provide strong confidence on the correlation number as was taught in the lectures that lower correlation coefficient does not necessarily mean weak correlation. Only correlation test results can be reliable.  
 
+```{r, fig.width=11, fig.height=4}
+
+bp.rs <- ggplot(wine.grouped, aes(x=quality, y=residual.sugar, color=quality, group=quality)) +
+         geom_boxplot(outlier.shape=8, outlier.color='red') +
+         stat_boxplot(geom='errorbar', width=0.3) +
+         xlab('Quality level') +
+         ylab('Residual sugar level') +
+         ggtitle('Residual sugar level in White Wine')
+
+bp.rs.red <- ggplot(redwine.grouped, aes(x=quality, y=residual.sugar, color=quality, group=quality)) +
+           geom_boxplot(outlier.shape=8, outlier.color='red') +
+           stat_boxplot(geom='errorbar', width=0.3) +
+           xlab('Quality level') +
+           ylab('Residual sugar level') +
+           ggtitle('Residual sugar level in Red Wine')
+
+bp.rs.r.w <- ggplot(wine.collated.grouped[wine.collated.grouped[, 'quality']=='high',], aes(x=wine.type, y=residual.sugar, color=wine.type)) +
+             geom_boxplot(outlier.shape=8, outlier.color='red') +
+             stat_boxplot(geom='errorbar', width=0.3) +
+             xlab('Quality level') +
+             ylab('Residual sugar level') +
+             ggtitle('Residual sugar level in Red and White')
+
+grid.arrange(bp.rs, bp.rs.red, bp.rs.r.w, nrow=1)
+```
+
 **Correlation between alcohol and residual sugar in high quality wines**  
 
 ```{r, results='markup'}
