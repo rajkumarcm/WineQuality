@@ -46,7 +46,7 @@ library(latex2exp)
 
 Wine is an alcoholic beverage that has been produced for over thousands of years and was originally founded in Georgia from 6000BC. People consume wine for its wonderful sweet taste and nutritious properties that are beneficial to health. While there are many types of wines, two of the most famous variants would be the Red and White versions produced mostly in the Europe. Wines that were once expensive to buy, are increasingly enjoyed by consumers around the world and the market is expected to grow annually by 7.22% (CAGR 2022-2025)[Statista](https://www.statista.com/outlook/cmo/alcoholic-drinks/wine/worldwide). For this analysis, we are dealing with wine made in Vinho Verde, a region in Portuguese and is one of the top ten wine exporting countries with approximately 3% of the market share in 2005 and whose export has seen substantial growth between 1997 and 2007 [Cortez et. al](http://repositorium.sdum.uminho.pt/bitstream/1822/10029/1/wine5.pdf). The sales of this wine has reached a whopping €64 million just outside the Portugal market and one of the biggest importers of this wine would be The U.S [The Portugal News](https://www.theportugalnews.com/news/2022-01-25/record-year-for-vinho-verde/64832)   
 
-Wine industries are researching different methods involved in the process of creating and selling wines at the same time retaining its quality to support its growth. Wines are sold at different price ranges depending on its quality, while the least expensive could be as low as $4, the pinnacle of wines could cost beyond $200 per bottle [winefolly](https://winefolly.com/lifestyle/reality-of-wine-prices-what-you-get-for-what-you-spend/). Given a bottle of wine could be sold for over $200, we decided to conduct analyses to better understand what gives rise to the quality by assessing publicly available dataset downloaded from UCI Machine Learning Repository. Perhaps this work will lay the foundation for future research analysis in understanding what defines a better quality **White** wine. This analysis is restricted to *White* wine although I do make comparisons between White and Red wines to have an overall better perception.  
+Wine industries are researching different methods involved in the process of creating and selling wines at the same time retaining its quality to support its growth. Wines are sold at different price ranges depending on its quality, while the least expensive could be as low as $4, the pinnacle of wines could cost beyond $200 per bottle [winefolly](https://winefolly.com/lifestyle/reality-of-wine-prices-what-you-get-for-what-you-spend/). Given a bottle of wine could be sold for over $200, we decided to conduct analyses to better understand what gives rise to the quality by assessing publicly available dataset downloaded from UCI Machine Learning Repository. Perhaps this work will lay the foundation for future research analysis in understanding what defines a better quality **White** wine. This analysis is restricted to **White** wine although I do make comparisons between White and Red wines to have an overall better perception.  
 
 ```{r, include=F}
 
@@ -144,7 +144,7 @@ The dataset contains `r nrow(wine)` instances with `r length(colnames(wine))-1` 
 show(str(wine))
 ```
 
-## Data Summary  
+## Data Descriptive Summary  
 
 ```{r, results='markup'}
 library(psych)
@@ -190,11 +190,10 @@ It is also believed, without drifting far from the scope of this analysis, acidi
 
 # Chapter 3: Smart Questions  
 
-1. How does the alcohol content affect the quality?
-2. How does the ph level within the wine affect its quality?
+1. Does sugar level affect the alcohol level and how this relationship affects the quality?  
+2. Are white wines more acidic compared to Red wines? And how does this affect the quality?   
 3. Are there different acidity levels that are heavily correlated and how do they affect quality?
-4. Can we describe an example for a high quality Vinho verde?
-5. Are there any independent variables that are highly correlated with each other ?
+4. Are there any independent variables that are highly correlated with each other ?  
 
 # Chapter 4: Analyses 
 
@@ -335,11 +334,8 @@ wine.collated.grouped <- rbind(wine.grouped, redwine.grouped)
 wine.collated.grouped$wine.type <- as.factor(wine.collated.grouped$wine.type)
 ```
 
-## Answering SMART Questions  
 
-### Analysing how various alcohol level affect the overall quality  
-
-```{r quality}
+```{r}
 # , fig.width=11, fig.height=4
 bp.al <- ggplot(wine, aes(x=quality, y=alcohol, color=quality, group=quality)) +
          geom_boxplot(outlier.shape=8, outlier.color='red') +
@@ -350,6 +346,16 @@ bp.al <- ggplot(wine, aes(x=quality, y=alcohol, color=quality, group=quality)) +
 
 bp.al
 
+```
+
+It is believed this plot makes it easier to draw conclusions on what level of ABV defines a better quality wine.  
+
+## Answering SMART Questions  
+
+### Does sugar level affect the alcohol level and how this relationship affects the quality?  
+
+```{r quality}
+bp.al
 ```
 
 The above box and whisker plot confirms that better quality is indeed associated with increased level of alcohol level as was also our finding from the prior research. Now, it is time to understand the connection between alcohol level and residual sugar as it was understood from the prior research that alcohol is produced by the fermentation process by converting grape sugar into ethanol.  
@@ -509,7 +515,7 @@ ttest.alc.good.bad
 
 Statistical results once again confirm what we can from the boxplots that high quality wines on average tend to have ABV higher than `r mean(bad$alcohol)`$\%$ as the p value of the `t.test` was `r ttest.alc.good.bad$p.value`  
 
-### How does the pH level affect the wine quality?  
+### Are white wines more acidic compared to Red wines? And how does this affect the quality?   
 
 **Terminology Alert**  
 pH level refers to how basic or acidic the liquid is. While a lower pH level means the liquid is more acidic, higher level represents how basic or alkaline the water is.  
@@ -622,6 +628,8 @@ s.cplot <- corrplot(cor(wine[, sulfur_cnames]),
 
 Not surprised by the results, they do have a lot in common.  
 
+#### Fixed Acidity  
+
 ```{r fixed.acidity, fig.width=12, fig.height=4}
 
 bp.fa <- ggplot(wine, aes(x=quality, y=fixed.acidity, color=quality, group=quality)) +
@@ -663,17 +671,7 @@ I wish not to go too much into explaining why I sometimes prefer running an `ANO
 
 Talking about the results, both `ANOVA` and `t.test` do point that quality does have an effect on the fixed acidity levels between the two subgroups low and high quality in **White** wines. For this particular test, I did not define an alternative hypothesis since I can see from the boxplots above for White Wine that both low and high quality wines tend to have almost similar levels of fixed acidity and I believe it would be appropriate to define the alternate hypothesis $H_1 :=$ Difference in mean between the two subgroups is not equal to $0$.  
 
-### Are there any independent variables that are highly correlated with each other ?  
-
-```{r, results='asis'}
-ind_cnames <- colnames(good)
-ind_cnames <- ind_cnames[1:(length(ind_cnames)-1)]
-corrplot(cor(good[, ind_cnames]),
-         type='upper',
-         method='circle')
-```
-
-### Volatile acidity  
+#### Volatile acidity  
 
 ```{r volatile.acidity, fig.width=11, fig.height=4}
 
@@ -706,7 +704,7 @@ grid.arrange(bp.va, bp.va.red, bp.va.red.white, nrow=1)
 
 As mentioned earlier, too high or too low of volatile acidity can give bad smell and leave the consumer with an unpleasant experience. Perhaps this confirms our initial idea. I can see for both red and white wine that better quality wine always has relatively lesser volatile acidity level. In White Wine, the high quality wine is associated with volatile acidity less than 0.28. I wish not to run a hypothesis test as the difference is obvious.  
 
-### Citric acid  
+#### Citric acid  
 
 ```{r citric.acidity, fig.height=4, fig.width=11}
 bp.ca <- ggplot(wine.grouped, aes(x=quality, y=citric.acid, color=quality)) +
@@ -742,7 +740,17 @@ ttest.citric.good.bad
 
 Since there was a confusion in understanding whether citric acid is similar to both subgroups low and high quality in White wine, I performed the hypothesis test that produced a pvalue of `r ttest.citric.good.bad$p.value`. Since the pvalue is higher than the significance threshold $0.05$, I fail to reject the null hypothesis and conclude that there is no statistical significance between them. In other words, quality has no effect on the citric acid level in low and high quality **White** wines. In terms of the comparison between red and the white wine's citric acid levels, the above boxplot confirms our preconceived opinion that white wines tend to contain more citric acid in them as the grapes are harvested before they are fully ripe.  
 
-### Chloride  
+### Are there any independent variables that are highly correlated with each other ?  
+
+```{r, results='asis'}
+ind_cnames <- colnames(good)
+ind_cnames <- ind_cnames[1:(length(ind_cnames)-1)]
+corrplot(cor(good[, ind_cnames]),
+         type='upper',
+         method='circle')
+```
+
+## Chloride  
 
 ```{r chloride, fig.width=11, fig.height=4}
 
@@ -780,7 +788,7 @@ ttest.chloride.good.bad
 
 As the pvalue for the above `t.test` is `r ttest.chloride.good.bad$p.value` that is greater than significance threshold $0.05$, I conclude that on average chlorides level in better quality White wine must be $<$ `r mean(bad$chlorides)`.  
 
-### Density  
+## Density  
 
 ```{r, fig.width=11, fig.height=4}
 bp.density.w.quality <- ggplot(wine, aes(x=quality, y=density, color=quality)) +
@@ -820,7 +828,7 @@ ylim(0.984, 1.005)
 ggtitle('How density and alcohol are correlated')
 ```
 
-### Sulphates 
+## Sulphates 
 
 ```{r, fig.width=11, fig.height=4}
 
@@ -861,14 +869,18 @@ ttest.sulphates.good.bad
 
 As the pvalue for the above `t.test` is `r ttest.sulphates.good.bad$p.value` that is greater than the significance threshold $0.05$ I conclude there is not statistical significance in sulphates level between the two subgroups low and high quality in **White** wines.  
 
-From the analyses conducted above, we can conclude a good quality Vinho Verde White wine should describe the following properties:  
+## Conclusion  
+
+From the analyses conducted above, we can conclude a good quality Vinho Verde White wine should possess the following properties:  
 
 1. Residual sugar below 7.0326829.  
 2. ABV of higher than 9.8%  
 3. pH level of higher than 3.164  
 4. Chlorides less than 0.04  
+5. Volatile acidity less than 0.28  
+6. Density less than 0.995  
 
-I don't think it would be a good idea to list all exhaustive criterias as we will quickly run into something called overfitting. I believe the above stated constraints act as a general criteria to illustrate a good quality Vinho Verde wine.  
+I don't think it would be a good idea to list all exhaustive criteria as we will quickly run into something called overfitting. I believe the above stated constraints act as a general criteria to illustrate a good quality Vinho Verde **White** wine.  
 
 # Modeling  
 
@@ -1015,7 +1027,7 @@ ttest.density.red.white
 It would be my hypothesis based on the research that White wines must be higher in density compared to Red wines as Red wines are the ones with more ABV and both `t.test` and boxplot defied this. I believe this is due to the level of other chemicals present in the composition.  
 
 ```{r test_model, results='markup'}
-test.model <- glm(quality ~ ., data=wine.grouped[-length(colnames(wine.grouped))], family='binomial')
+test.model <- glm(quality ~ ., data=wine.grouped[-length(colnames(wine.grouped))], family='binomial') # uses logit by default
 summary(test.model)
 ```
 We can clearly the highly correlated variables shows no statistical significance.  
@@ -1090,3 +1102,69 @@ summary(an.md)
 ```
 
 Now I am somewhat surprised that ANOVA summary for the model does not show statistical significance level or p adjusted values. Perhaps this is due to the use of GLM instead of LM. Due to the limited scope of this project, we will end the analysis at this point and will look forward learning more on interpreting ANOVA results with GLM models.  
+
+# Things tried  
+
+## Connection between residual sugar, alcohol and quality
+
+```{r, results='markup'}
+library(pracma)
+library(plotly)
+
+get_prob <- function(logit){
+  odds <- exp(logit)
+  return(odds/(1+odds))
+}
+
+tmp.model2 <- glm(quality~residual.sugar+alcohol, data=wine.grouped, family='binomial')
+al_range <- seq(min(good$alcohol), max(good$alcohol), length.out=50)
+rs_range <- seq(min(good$residual.sugar), max(good$residual.sugar), length.out=50)
+M <- expand.grid(al_range, rs_range)
+al <- M$Var1
+rs <- M$Var2
+c <- tmp.model2$coefficients[['(Intercept)']]
+b1 <- tmp.model2$coefficients[['residual.sugar']]
+b2 <- tmp.model2$coefficients[['alcohol']]
+logits <- c + b1*rs + b2*al
+q.probs <- get_prob(logits)
+q.probs <- as.matrix(q.probs) %>% Reshape(50, 50)
+
+# tmp.z <- c + b1*wine.grouped$residual.sugar + b2*wine.grouped$alcohol
+# tmp.z.probs <- get_prob(tmp.z)
+
+fig <- plot_ly(x=rs_range, y=al_range, z=q.probs) %>% layout(scene=list()) %>% 
+       # add_trace(data=wine.grouped, x=~residual.sugar, y=~alcohol, z=tmp.z.probs, mode = "markers", type = "scatter3d", 
+       #      marker = list(size = 5, colors=c("blue", "red"), symbol = 104)) %>%
+       add_surface()
+fig
+```
+
+The curve represents something called `sigmoid` a so called an activation function that maps logits that are unbounded $[-\infty, +\infty]$ to $[0, 1]$ that is often interpreted as probability. Labels on axis did not work for some reason so **x->residual sugar, y->alcohol and z->prob of being high quality**  
+
+# References  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
