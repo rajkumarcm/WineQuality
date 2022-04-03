@@ -1103,7 +1103,7 @@ summary(an.md)
 
 Now I am somewhat surprised that ANOVA summary for the model does not show statistical significance level or p adjusted values. Perhaps this is due to the use of GLM instead of LM. Due to the limited scope of this project, we will end the analysis at this point and will look forward learning more on interpreting ANOVA results with GLM models.  
 
-# Things tried  
+# Future Work    
 
 ## Connection between residual sugar, alcohol and quality
 
@@ -1141,11 +1141,35 @@ fig
 
 The curve represents something called `sigmoid` a so called an activation function that maps logits that are unbounded $[-\infty, +\infty]$ to $[0, 1]$ that is often interpreted as probability. Labels on axis did not work for some reason so **x->residual sugar, y->alcohol and z->prob of being high quality**  
 
+## Clustering  
+
+In the due course, I wish to further understand how clustering such as Gaussian Mixture Model can be used to categorize different quality levels. Perhaps it would help have an even better understanding.  
+
+## Multicollinearity  
+
+We have seen in the Modeling section that there were several variables that were highly correlated with each other and did not allow us to include them in the model. In the further course, I wish to use Principal Component Analysis with sphering to analyze and observe how multicollinearity can be avoided and at the same improve model performance with less dimensions included.  
+
+
 # References  
 
+1. Wine - worldwide: Statista market forecast. Statista. (n.d.). Retrieved April 3, 2022, from https://www.statista.com/outlook/cmo/alcoholic-drinks/wine/worldwide  
 
+2. Hagan , M. K. (2021, April 20). The powers of wine fermentation: What it does besides create alcohol. A large glass of real wine, by the bottle. Retrieved April 3, 2022, from https://usualwines.com/blogs/knowledge-base/wine-fermentation  
 
+3. Goldsmith, R. (2014, April 23). Vinho Verde – a splash of summer vinous joy! Vinho Verde – a Splash of Summer Vinous Joy! Retrieved April 3, 2022, from https://www.alcoholprofessor.com/blog-posts/blog/2014/04/23/vinho-verde-a-splash-of-summer-vinous-joy  
 
+4. Cortez, P., Cerdeira, A., Almeida, F., Matos, T., & Reis, J. (2009). Modeling wine preferences by data mining from physicochemical properties. Decision Support Systems, 47(4), 547–553.  
+
+5. Exports of portuguese 'Vinho verde' surpass 50% of total sales. The Portugal News. (2019, March 14). Retrieved April 3, 2022, from https://www.theportugalnews.com/news/exports-of-portuguese-vinho-verde-surpass-50-of-total-sales/48712?fbclid=IwAR2Q1Uk_EzV0HKMv8RMscMEPC6m20PosvzppC7qIfv8gzBeVDlErwrDHvfA  
+
+6. Puckette, M. (2021, January 25). Reality of wine prices (what you get for what you spend). Wine Folly. Retrieved April 3, 2022, from https://winefolly.com/lifestyle/reality-of-wine-prices-what-you-get-for-what-you-spend/  
+
+7. Suckling, J. (2021, July 29). Learn about alcohol content in wine: Highest to lowest ABV wines - 2022. MasterClass. Retrieved April 3, 2022, from https://www.masterclass.com/articles/learn-about-alcohol-content-in-wine-highest-to-lowest-abv-wines#what-does-alcohol-by-volume-abv-mean  
+
+8. Saladino, E., & Grinberg, D. (2019, April 22). Let's all say it just once: There's nothing wrong with liking sweet wine. VinePair. Retrieved April 3, 2022, from https://vinepair.com/articles/sweet-wine-dry-culture/  
+
+9. Deviations, O. T. S. (2018, September 14). An overview of correlation measures between categorical and continuous variables. Medium. Retrieved April 3, 2022, from https://medium.com/@outside2SDs/an-overview-of-correlation-measures-between-categorical-and-continuous-variables-4c7f85610365   
+10. Kumar, A. (2022, January 23). Python - replace missing values with mean, median & mode. Data Analytics. Retrieved April 3, 2022, from https://vitalflux.com/pandas-impute-missing-values-mean-median-mode/  
 
 
 
